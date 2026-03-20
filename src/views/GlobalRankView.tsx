@@ -67,7 +67,7 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
         </p>
       </section>
 
-      <div className="bg-surface-card p-10 rounded-2xl shadow-sm border border-slate-100 min-h-[570px] flex flex-col">
+      <div className="bg-surface-card p-10 rounded-2xl shadow-sm border border-slate-100 min-h-[580px] flex flex-col">
         <div className="flex items-center gap-3 mb-12">
           <div className="p-2 bg-gain-light/10 rounded-lg text-gain">
             <Trophy size={20} />
@@ -76,7 +76,7 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
         </div>
 
         <div className="flex-1 overflow-x-auto">
-          <div className="min-w-[800px] flex items-end justify-around gap-8 px-10 pt-44 pb-12 border-b border-slate-100 h-full">
+          <div className="min-w-[800px] flex items-end justify-around gap-8 px-10 pt-36 pb-12 border-b border-slate-100 h-full">
             {data.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center py-20 text-slate-300">
                  <span className="text-sm font-bold uppercase tracking-widest">Nenhuma pista destaque configurada</span>
