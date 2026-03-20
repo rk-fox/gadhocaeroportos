@@ -51,19 +51,25 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
     let afterVal = 0;
     
     if (activeEtapa === 'DEP') {
+      // Cenário Base: Taxi + ROT + OMNI Antiga
       beforeVal = pista.taxi_dep_cabeceira + pista.rot_dep_cabeceira + pista.omni_antiga;
+      // Cenário Otimizado: Taxi + ROT + OMNI Otimizada
       afterVal = pista.taxi_dep_intersecao + pista.rot_dep_intersecao + pista.omni_otimizada;
     } else {
+      // Cenário ARR: Taxi + ROT (Cuidado: Verifique se há OMNI aqui também no seu modelo)
       beforeVal = pista.taxi_arr_cabeceira + pista.rot_arr_cabeceira;
       afterVal = pista.taxi_arr_intersecao + pista.rot_arr_intersecao;
     }
 
-    const gainPercent = beforeVal > 0 ? ((beforeVal - afterVal) / beforeVal) * 100 : 0;
+    // A fórmula correta do ganho percentual (Redução em relação ao original)
+    const gainPercent = beforeVal > 0 
+      ? ((beforeVal - afterVal) / beforeVal) * 100 
+      : 0;
 
     return {
       pista,
       gains,
-      gainPercent
+      gainPercent: Math.max(0, gainPercent) // Evita valores negativos se o "otimizado" for pior
     };
   });
 
