@@ -97,6 +97,47 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
           </p>
         </div>
 
+        {/* Periodicity Selector internal to the view */}
+<div className="flex items-center bg-surface-low rounded-lg p-1 gap-1 border border-slate-200 shadow-sm">
+  <span className="text-[10px] font-bold text-slate-400 uppercase px-2">Período:</span>
+  
+  {/* Botão Mês */}
+  <button 
+    onClick={() => setPeriodoSelecionado('mes')}
+    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+      periodoSelecionado === 'mes' 
+        ? 'bg-white shadow-sm text-gain border border-slate-100' 
+        : 'text-text-muted hover:bg-white/50'
+    }`}
+  >
+    Mês
+  </button>
+
+  {/* Botão Winter */}
+  <button 
+    onClick={() => setPeriodoSelecionado('winter')}
+    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+      periodoSelecionado === 'winter' 
+        ? 'bg-white shadow-sm text-gain border border-slate-100' 
+        : 'text-text-muted hover:bg-white/50'
+    }`}
+  >
+    Winter
+  </button>
+
+  {/* Botão Summer */}
+  <button 
+    onClick={() => setPeriodoSelecionado('summer')}
+    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+      periodoSelecionado === 'summer' 
+        ? 'bg-white shadow-sm text-gain border border-slate-100' 
+        : 'text-text-muted hover:bg-white/50'
+    }`}
+  >
+    Summer
+  </button>
+</div>
+        
         {/* Runway Selector internal to the view */}
         <div className="flex items-center bg-surface-low rounded-lg p-1 gap-1 border border-slate-200 shadow-sm">
           <span className="text-[10px] font-bold text-slate-400 uppercase px-2">Pista:</span>
