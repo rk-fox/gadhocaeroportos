@@ -63,7 +63,7 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
           Comparação Global de Eficiência
         </h2>
         <p className="text-text-muted max-w-2xl mx-auto">
-          Visão consolidada do ganho operacional por aeródromo (Pistas Destaque), comparando o cenário base com o otimizado na etapa de {activeEtapa}.
+          Visão consolidada do ganho operacional por aeródromo (Pistas Preferencial), comparando o cenário base com o otimizado na etapa de {activeEtapa}.
         </p>
       </section>
 
