@@ -45,23 +45,16 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
 
   // Calculate results for all records
   const results = allPistas.map(pista => {
+    // 1. Obtemos os ganhos brutos e os totais (antes e depois) da sua util de cálculo
     const gains = calculateGains(pista, factors, scale, activeEtapa);
     
-    let beforeVal = 0;
-    let afterVal = 0;
-    
-    if (activeEtapa === 'DEP') {
-      // Cenário Base: Taxi + ROT + OMNI Antiga
-      beforeVal = pista.taxi_dep_cabeceira + pista.rot_dep_cabeceira + pista.omni_antiga;
-      // Cenário Otimizado: Taxi + ROT + OMNI Otimizada
-      afterVal = pista.taxi_dep_intersecao + pista.rot_dep_intersecao + pista.omni_otimizada;
-    } else {
-      // Cenário ARR: Taxi + ROT (Cuidado: Verifique se há OMNI aqui também no seu modelo)
-      beforeVal = pista.taxi_arr_cabeceira + pista.rot_arr_cabeceira;
-      afterVal = pista.taxi_arr_intersecao + pista.rot_arr_intersecao;
-    }
+    // 2. Extraímos os valores da métrica ATIVA para o cálculo percentual
+    // assumindo que sua função calculateGains retorna um objeto com { before, after } para cada métrica
+    const beforeVal = gains.before[activeMetric];
+    const afterVal = gains.after[activeMetric];
 
-    // A fórmula correta do ganho percentual (Redução em relação ao original)
+    // 3. Cálculo do Percentual de Ganho baseado na métrica selecionada
+    // Fórmula: ((Original - Otimizado) / Original) * 100
     const gainPercent = beforeVal > 0 
       ? ((beforeVal - afterVal) / beforeVal) * 100 
       : 0;
@@ -69,11 +62,11 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
     return {
       pista,
       gains,
-      gainPercent: Math.max(0, gainPercent) // Evita valores negativos se o "otimizado" for pior
+      gainPercent: Number(gainPercent.toFixed(2)) // Precisão de 2 casas decimais
     };
   });
 
-  // Sort by gain percentage
+  // Ordenação dinâmica: sempre o maior ganho percentual no topo
   const sortedResults = [...results].sort((a, b) => b.gainPercent - a.gainPercent);
 
   const renderMedal = (rank: number) => {
