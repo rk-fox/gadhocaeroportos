@@ -162,30 +162,6 @@ export default function DataView({
 
   return (
     <div className="max-w-7xl mx-auto space-y-10">
-      {/* Documentation Section */}
-      <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-        <h3 className="text-xl font-display font-bold text-text-main mb-6 flex items-center gap-3">
-          <Info className="text-sidebar" /> Guia de Cadastro de Dados
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <DocItem 
-            title="Distâncias (m)" 
-            desc="Obtenha as distâncias de taxiamento medindo no Google Earth ou cartas aeroportuárias (ADC)." 
-            fields={['Taxi DEP Cab/Int', 'Taxi ARR Cab/Int']}
-          />
-          <DocItem 
-            title="Tempos ROT (s)" 
-            desc="Média de observação de tempo que a aeronave leva para livrar a pista após o pouso ou alinhar para decolagem." 
-            fields={['ROT DEP Cab/Int', 'ROT ARR Cab/Int']}
-          />
-          <DocItem 
-            title="OMNI (s)" 
-            desc="Diferença de tempo entre um procedimento de saída/chegada convencional vs. otimizado (RNP/PBN)." 
-            fields={['Procedimento Antigo/Otimizado']}
-          />
-        </div>
-      </section>
-
       <section>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
