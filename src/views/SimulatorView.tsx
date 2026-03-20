@@ -15,12 +15,15 @@ interface SimulatorViewProps {
 }
 
 export default function SimulatorView({ factors, activeAerodromeId, activeAerodrome, activeEtapa }: SimulatorViewProps) {
+  // Estados dos Parâmetros
   const [flightsPerDay, setFlightsPerDay] = useState(20);
   const [daysPerMonth, setDaysPerMonth] = useState(30);
   const [adoptionRate, setAdoptionRate] = useState(80);
   
+  // Estados de Seleção
   const [pistas, setPistas] = useState<PistaConfiguracao[]>([]);
   const [selectedPistaId, setSelectedPistaId] = useState<number | null>(null);
+  const [periodoSelecionado, setPeriodoSelecionado] = useState<'mes' | 'winter' | 'summer'>('mes');
 
   useEffect(() => {
     if (activeAerodromeId) {
@@ -35,110 +38,93 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
   }, [activeAerodromeId]);
 
   const selectedPista = pistas.find(p => p.id === selectedPistaId);
+
+  // Lógica de Período Dinâmico
+  let activeDays = daysPerMonth;
+  if (periodoSelecionado === 'winter') activeDays = 118;
+  if (periodoSelecionado === 'summer') activeDays = 247;
+
+  // Cálculos de Volume
+  const totalFlights = flightsPerDay * activeDays * (adoptionRate / 100);
+  
+  // Informações para o card "Volume Projetado" (mantendo as projeções visíveis para ref.)
   const totalMonthlyFlights = flightsPerDay * daysPerMonth * (adoptionRate / 100);
   const totalWinter = flightsPerDay * 118 * (adoptionRate / 100);
   const totalSummer = flightsPerDay * 247 * (adoptionRate / 100);
   
+  // Ganhos Unitários
   const unitGainsDEP = selectedPista ? calculateGains(selectedPista, factors, 1, 'DEP') : null;
   const unitGainsARR = selectedPista ? calculateGains(selectedPista, factors, 1, 'ARR') : null;
 
-  const monthlySavingsDEP = unitGainsDEP ? {
-    time: unitGainsDEP.total.time * totalMonthlyFlights,
-    fuel: unitGainsDEP.total.fuel * totalMonthlyFlights,
-    distance: unitGainsDEP.total.distance * totalMonthlyFlights,
-    co2: unitGainsDEP.total.co2 * totalMonthlyFlights,
+  // Economia Dinâmica (usada nos cards)
+  const savingsDEP = unitGainsDEP ? {
+    time: unitGainsDEP.total.time * totalFlights,
+    fuel: unitGainsDEP.total.fuel * totalFlights,
+    distance: unitGainsDEP.total.distance * totalFlights,
+    co2: unitGainsDEP.total.co2 * totalFlights,
   } : { time: 0, fuel: 0, distance: 0, co2: 0 };
 
-  const monthlySavingsARR = unitGainsARR ? {
-    time: unitGainsARR.total.time * totalMonthlyFlights,
-    fuel: unitGainsARR.total.fuel * totalMonthlyFlights,
-    distance: unitGainsARR.total.distance * totalMonthlyFlights,
-    co2: unitGainsARR.total.co2 * totalMonthlyFlights,
+  const savingsARR = unitGainsARR ? {
+    time: unitGainsARR.total.time * totalFlights,
+    fuel: unitGainsARR.total.fuel * totalFlights,
+    distance: unitGainsARR.total.distance * totalFlights,
+    co2: unitGainsARR.total.co2 * totalFlights,
   } : { time: 0, fuel: 0, distance: 0, co2: 0 };
 
-
-  const WinterSavingsDEP = unitGainsDEP ? {
-    time: unitGainsDEP.total.time * totalWinter,
-    fuel: unitGainsDEP.total.fuel * totalWinter,
-    distance: unitGainsDEP.total.distance * totalWinter,
-    co2: unitGainsDEP.total.co2 * totalWinter,
-  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
-
-  const WinterSavingsARR = unitGainsARR ? {
-    time: unitGainsARR.total.time * totalWinter,
-    fuel: unitGainsARR.total.fuel * totalWinter,
-    distance: unitGainsARR.total.distance * totalWinter,
-    co2: unitGainsARR.total.co2 * totalWinter,
-  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
-
-  const SummerSavingsDEP = unitGainsDEP ? {
-    time: unitGainsDEP.total.time * totalSummer,
-    fuel: unitGainsDEP.total.fuel * totalSummer,
-    distance: unitGainsDEP.total.distance * totalSummer,
-    co2: unitGainsDEP.total.co2 * totalSummer,
-  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
-
-  const SummerSavingsARR = unitGainsARR ? {
-    time: unitGainsARR.total.time * totalSummer,
-    fuel: unitGainsARR.total.fuel * totalSummer,
-    distance: unitGainsARR.total.distance * totalSummer,
-    co2: unitGainsARR.total.co2 * totalSummer,
-  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
+  // Títulos dinâmicos
+  const tituloPeriodo = periodoSelecionado === 'mes' ? 'Mensal' : periodoSelecionado === 'winter' ? 'Winter' : 'Summer';
 
   return (
     <div className="max-w-7xl mx-auto">
       <section className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 className="text-3xl font-display font-extrabold text-text-main tracking-tight leading-none mb-2">
-            Simulador de Impacto Mensal ({activeAerodrome?.indicativo})
+            Simulador de Impacto {tituloPeriodo} ({activeAerodrome?.indicativo})
           </h2>
           <p className="text-text-muted">
             Projete a economia acumulada para a pista selecionada ({activeEtapa}) em {activeAerodrome?.indicativo}.
           </p>
         </div>
 
-        {/* Periodicity Selector internal to the view */}
-<div className="flex items-center bg-surface-low rounded-lg p-1 gap-1 border border-slate-200 shadow-sm">
-  <span className="text-[10px] font-bold text-slate-400 uppercase px-2">Período:</span>
-  
-  {/* Botão Mês */}
-  <button 
-    onClick={() => setPeriodoSelecionado('mes')}
-    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
-      periodoSelecionado === 'mes' 
-        ? 'bg-white shadow-sm text-gain border border-slate-100' 
-        : 'text-text-muted hover:bg-white/50'
-    }`}
-  >
-    Mês
-  </button>
+        {/* Periodicity Selector */}
+        <div className="flex items-center bg-surface-low rounded-lg p-1 gap-1 border border-slate-200 shadow-sm">
+          <span className="text-[10px] font-bold text-slate-400 uppercase px-2">Período:</span>
+          
+          <button 
+            onClick={() => setPeriodoSelecionado('mes')}
+            className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+              periodoSelecionado === 'mes' 
+                ? 'bg-white shadow-sm text-gain border border-slate-100' 
+                : 'text-text-muted hover:bg-white/50'
+            }`}
+          >
+            Mês
+          </button>
 
-  {/* Botão Winter */}
-  <button 
-    onClick={() => setPeriodoSelecionado('winter')}
-    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
-      periodoSelecionado === 'winter' 
-        ? 'bg-white shadow-sm text-gain border border-slate-100' 
-        : 'text-text-muted hover:bg-white/50'
-    }`}
-  >
-    Winter
-  </button>
+          <button 
+            onClick={() => setPeriodoSelecionado('winter')}
+            className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+              periodoSelecionado === 'winter' 
+                ? 'bg-white shadow-sm text-gain border border-slate-100' 
+                : 'text-text-muted hover:bg-white/50'
+            }`}
+          >
+            Winter
+          </button>
 
-  {/* Botão Summer */}
-  <button 
-    onClick={() => setPeriodoSelecionado('summer')}
-    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
-      periodoSelecionado === 'summer' 
-        ? 'bg-white shadow-sm text-gain border border-slate-100' 
-        : 'text-text-muted hover:bg-white/50'
-    }`}
-  >
-    Summer
-  </button>
-</div>
+          <button 
+            onClick={() => setPeriodoSelecionado('summer')}
+            className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+              periodoSelecionado === 'summer' 
+                ? 'bg-white shadow-sm text-gain border border-slate-100' 
+                : 'text-text-muted hover:bg-white/50'
+            }`}
+          >
+            Summer
+          </button>
+        </div>
         
-        {/* Runway Selector internal to the view */}
+        {/* Runway Selector */}
         <div className="flex items-center bg-surface-low rounded-lg p-1 gap-1 border border-slate-200 shadow-sm">
           <span className="text-[10px] font-bold text-slate-400 uppercase px-2">Pista:</span>
           {pistas.map(p => (
@@ -169,15 +155,20 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
               value={flightsPerDay} 
               min={1} max={500} 
               onChange={setFlightsPerDay} 
-              unit="voos"
+              unit=" voos"
             />
-            <SliderGroup 
-              label="Dias por mês" 
-              value={daysPerMonth} 
-              min={1} max={31} 
-              onChange={setDaysPerMonth} //trocar para 
-              unit="dias"
-            />
+            
+            {/* Oculta controle de dias se não for "mes" */}
+            {periodoSelecionado === 'mes' && (
+              <SliderGroup 
+                label="Dias por mês" 
+                value={daysPerMonth} 
+                min={1} max={31} 
+                onChange={setDaysPerMonth} 
+                unit=" dias"
+              />
+            )}
+
             <SliderGroup 
               label="Taxa de Adesão" 
               value={adoptionRate} 
@@ -189,25 +180,25 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
           </div>
 
           <div className="pt-6 border-t border-slate-100">
-  <div className="flex flex-col gap-y-1 mb-2">
-    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-      Volume Projetado
-    </span>
-    <span className="text-sm font-black text-gain">
-      {totalMonthlyFlights.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/mês
-    </span>
-    <span className="text-sm font-black text-gain">
-      {totalSummer.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada (Summer)
-    </span>
-    <span className="text-sm font-black text-gain">
-      {totalWinter.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada (Winter)
-    </span>
-  </div>
-  
-  <p className="text-[10px] text-text-muted leading-relaxed italic">
-    * Calculado para Pista {selectedPista?.pista_identificador} na etapa de {activeEtapa}.
-  </p>
-</div>
+            <div className="flex flex-col gap-y-1 mb-2">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Volume Projetado
+              </span>
+              <span className={`text-sm font-black transition-colors ${periodoSelecionado === 'mes' ? 'text-gain' : 'text-slate-400'}`}>
+                {totalMonthlyFlights.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/mês
+              </span>
+              <span className={`text-sm font-black transition-colors ${periodoSelecionado === 'summer' ? 'text-gain' : 'text-slate-400'}`}>
+                {totalSummer.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada (Summer)
+              </span>
+              <span className={`text-sm font-black transition-colors ${periodoSelecionado === 'winter' ? 'text-gain' : 'text-slate-400'}`}>
+                {totalWinter.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada (Winter)
+              </span>
+            </div>
+            
+            <p className="text-[10px] text-text-muted leading-relaxed italic">
+              * Calculado para Pista {selectedPista?.pista_identificador} na etapa de {activeEtapa}.
+            </p>
+          </div>
         </div>
 
         {/* Projection Results */}
@@ -216,35 +207,37 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px flex-1 bg-slate-200"></div>
-              <h4 className="text-sm font-black text-sidebar uppercase tracking-widest px-4 py-1 bg-surface-low rounded-full border border-slate-200">Ganhos em Decolagem (DEP)</h4>
+              <h4 className="text-sm font-black text-sidebar uppercase tracking-widest px-4 py-1 bg-surface-low rounded-full border border-slate-200">
+                Ganhos em Decolagem (DEP)
+              </h4>
               <div className="h-px flex-1 bg-slate-200"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Tooltip content="Redução total de distância percorrida em solo e ar (Decolagem).">
                 <ResultCard 
                   label="Distância Reduzida" 
-                  value={`${(monthlySavingsDEP.distance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`} 
+                  value={`${(savingsDEP.distance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`} 
                   icon={<Maximize size={24} className="text-sidebar" />} 
                 />
               </Tooltip>
               <Tooltip content="Tempo total economizado considerando taxi e procedimentos (Decolagem).">
                 <ResultCard 
                   label="Tempo de Voo Poupado" 
-                  value={`${(monthlySavingsDEP.time / 3600).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h`} 
+                  value={`${(savingsDEP.time / 3600).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h`} 
                   icon={<Clock size={24} className="text-sidebar" />} 
                 />
               </Tooltip>
               <Tooltip content="Economia estimada de combustível (Decolagem).">
                 <ResultCard 
                   label="Economia de Combustível" 
-                  value={`${monthlySavingsDEP.fuel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
+                  value={`${savingsDEP.fuel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
                   icon={<Fuel size={24} className="text-sidebar" />} 
                 />
               </Tooltip>
               <Tooltip content="Redução direta na emissão de CO2 (Decolagem).">
                 <ResultCard 
                   label="Redução de CO2" 
-                  value={`${monthlySavingsDEP.co2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
+                  value={`${savingsDEP.co2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
                   icon={<Wind size={24} className="text-sidebar" />} 
                 />
               </Tooltip>
@@ -255,35 +248,37 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px flex-1 bg-slate-200"></div>
-              <h4 className="text-sm font-black text-gain uppercase tracking-widest px-4 py-1 bg-gain-light/10 rounded-full border border-gain/20">Ganhos em Pouso (ARR)</h4>
+              <h4 className="text-sm font-black text-gain uppercase tracking-widest px-4 py-1 bg-gain-light/10 rounded-full border border-gain/20">
+                Ganhos em Pouso (ARR)
+              </h4>
               <div className="h-px flex-1 bg-slate-200"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Tooltip content="Redução total de distância percorrida em solo e ar (Pouso).">
                 <ResultCard 
                   label="Distância Reduzida" 
-                  value={`${(monthlySavingsARR.distance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`} 
+                  value={`${(savingsARR.distance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`} 
                   icon={<Maximize size={24} className="text-gain" />} 
                 />
               </Tooltip>
               <Tooltip content="Tempo total economizado considerando taxi e procedimentos (Pouso).">
                 <ResultCard 
                   label="Tempo de Voo Poupado" 
-                  value={`${(monthlySavingsARR.time / 3600).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h`} 
+                  value={`${(savingsARR.time / 3600).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h`} 
                   icon={<Clock size={24} className="text-gain" />} 
                 />
               </Tooltip>
               <Tooltip content="Economia estimada de combustível (Pouso).">
                 <ResultCard 
                   label="Economia de Combustível" 
-                  value={`${monthlySavingsARR.fuel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
+                  value={`${savingsARR.fuel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
                   icon={<Fuel size={24} className="text-gain" />} 
                 />
               </Tooltip>
               <Tooltip content="Redução direta na emissão de CO2 (Pouso).">
                 <ResultCard 
                   label="Redução de CO2" 
-                  value={`${monthlySavingsARR.co2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
+                  value={`${savingsARR.co2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
                   icon={<Wind size={24} className="text-gain" />} 
                 />
               </Tooltip>
