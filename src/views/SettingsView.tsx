@@ -112,7 +112,7 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
       <div className="space-y-3">
         <p className="text-[10px] font-black text-blue-400 uppercase">2. Distância Percorrida (NM)</p>
         <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 font-mono text-white text-center">
-          $$d_{NM} = v \times \left( \frac{t_sec}}{3600} \right)$$
+          $$d_{NM} = v \times \left( \frac{t_sec}{3600} \right)$$
         </div>
         <p className="text-[10px] leading-tight italic text-slate-500">
           Multiplica-se a velocidade ($v$ em knots) pelo tempo convertido em fração de hora.
