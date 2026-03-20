@@ -15,7 +15,7 @@ interface SimulatorViewProps {
 }
 
 export default function SimulatorView({ factors, activeAerodromeId, activeAerodrome, activeEtapa }: SimulatorViewProps) {
-  const [flightsPerDay, setFlightsPerDay] = useState(50);
+  const [flightsPerDay, setFlightsPerDay] = useState(20);
   const [daysPerMonth, setDaysPerMonth] = useState(30);
   const [adoptionRate, setAdoptionRate] = useState(80);
   
@@ -36,6 +36,8 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
 
   const selectedPista = pistas.find(p => p.id === selectedPistaId);
   const totalMonthlyFlights = flightsPerDay * daysPerMonth * (adoptionRate / 100);
+  const totalWinter = flightsPerDay * 118 * (adoptionRate / 100);
+  const totalSummer = flightsPerDay * 247 * (adoptionRate / 100);
   
   const unitGainsDEP = selectedPista ? calculateGains(selectedPista, factors, 1, 'DEP') : null;
   const unitGainsARR = selectedPista ? calculateGains(selectedPista, factors, 1, 'ARR') : null;
@@ -52,6 +54,35 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
     fuel: unitGainsARR.total.fuel * totalMonthlyFlights,
     distance: unitGainsARR.total.distance * totalMonthlyFlights,
     co2: unitGainsARR.total.co2 * totalMonthlyFlights,
+  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
+
+
+  const WinterSavingsDEP = unitGainsDEP ? {
+    time: unitGainsDEP.total.time * totalWinter,
+    fuel: unitGainsDEP.total.fuel * totalWinter,
+    distance: unitGainsDEP.total.distance * totalWinter,
+    co2: unitGainsDEP.total.co2 * totalWinter,
+  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
+
+  const WinterSavingsARR = unitGainsARR ? {
+    time: unitGainsARR.total.time * totalWinter,
+    fuel: unitGainsARR.total.fuel * totalWinter,
+    distance: unitGainsARR.total.distance * totalWinter,
+    co2: unitGainsARR.total.co2 * totalWinter,
+  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
+
+  const SummerSavingsDEP = unitGainsDEP ? {
+    time: unitGainsDEP.total.time * totalSummer,
+    fuel: unitGainsDEP.total.fuel * totalSummer,
+    distance: unitGainsDEP.total.distance * totalSummer,
+    co2: unitGainsDEP.total.co2 * totalSummer,
+  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
+
+  const SummerSavingsARR = unitGainsARR ? {
+    time: unitGainsARR.total.time * totalSummer,
+    fuel: unitGainsARR.total.fuel * totalSummer,
+    distance: unitGainsARR.total.distance * totalSummer,
+    co2: unitGainsARR.total.co2 * totalSummer,
   } : { time: 0, fuel: 0, distance: 0, co2: 0 };
 
   return (
@@ -103,7 +134,7 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
               label="Dias por mês" 
               value={daysPerMonth} 
               min={1} max={31} 
-              onChange={setDaysPerMonth} 
+              onChange={setDaysPerMonth} //trocar para 
               unit="dias"
             />
             <SliderGroup 
@@ -120,6 +151,8 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Volume Projetado</span>
               <span className="text-sm font-black text-gain">{totalMonthlyFlights.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/mês</span>
+              <span className="text-sm font-black text-gain">{totalSummer.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada(Summer)</span>
+              <span className="text-sm font-black text-gain">{totalWinter.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada(Winter)</span>
             </div>
             <p className="text-[10px] text-text-muted leading-relaxed italic">
               * Calculado para Pista {selectedPista?.pista_identificador} na etapa de {activeEtapa}.
