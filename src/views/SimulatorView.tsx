@@ -198,8 +198,8 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
             <p className="text-[10px] text-text-muted leading-relaxed italic">
               * Calculado para Pista {selectedPista?.pista_identificador} na etapa de {activeEtapa}.
             </p>
-            <p className="text-[10px] text-text-muted leading-relaxed italic">
-              * Para a temporada Winter são considerados 118 dias. Para a Summer são 247 dias.
+            <p className="text-[10px] text-text-muted leading-relaxed italic mt-1">
+  * Para o período {periodoSelecionado === 'mes' ? 'mensal' : periodoSelecionado} são considerados {activeDays} dias no cálculo.
             </p>
           </div>
         </div>
