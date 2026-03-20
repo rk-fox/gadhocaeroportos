@@ -148,16 +148,25 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
           </div>
 
           <div className="pt-6 border-t border-slate-100">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Volume Projetado</span>
-              <span className="text-sm font-black text-gain">{totalMonthlyFlights.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/mês</span>
-              <span className="text-sm font-black text-gain">{totalSummer.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada(Summer)</span>
-              <span className="text-sm font-black text-gain">{totalWinter.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada(Winter)</span>
-            </div>
-            <p className="text-[10px] text-text-muted leading-relaxed italic">
-              * Calculado para Pista {selectedPista?.pista_identificador} na etapa de {activeEtapa}.
-            </p>
-          </div>
+  <div className="flex flex-col gap-y-1 mb-2">
+    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+      Volume Projetado
+    </span>
+    <span className="text-sm font-black text-gain">
+      {totalMonthlyFlights.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/mês
+    </span>
+    <span className="text-sm font-black text-gain">
+      {totalSummer.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada (Summer)
+    </span>
+    <span className="text-sm font-black text-gain">
+      {totalWinter.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/temporada (Winter)
+    </span>
+  </div>
+  
+  <p className="text-[10px] text-text-muted leading-relaxed italic">
+    * Calculado para Pista {selectedPista?.pista_identificador} na etapa de {activeEtapa}.
+  </p>
+</div>
         </div>
 
         {/* Projection Results */}
