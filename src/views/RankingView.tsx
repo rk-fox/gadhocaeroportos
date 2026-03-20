@@ -45,28 +45,46 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
 
   // Calculate results for all records
   const results = allPistas.map(pista => {
-    // 1. Obtemos os ganhos brutos e os totais (antes e depois) da sua util de cálculo
     const gains = calculateGains(pista, factors, scale, activeEtapa);
     
-    // 2. Extraímos os valores da métrica ATIVA para o cálculo percentual
-    // assumindo que sua função calculateGains retorna um objeto com { before, after } para cada métrica
-    const beforeVal = gains.before[activeMetric];
-    const afterVal = gains.after[activeMetric];
+    // 1. Calculamos a Distância Base (Baseline) dependendo da etapa
+    const beforeDist = activeEtapa === 'DEP' 
+      ? (pista.taxi_dep_cabeceira + pista.rot_dep_cabeceira + pista.omni_antiga)
+      : (pista.taxi_arr_cabeceira + pista.rot_arr_cabeceira);
 
-    // 3. Cálculo do Percentual de Ganho baseado na métrica selecionada
-    // Fórmula: ((Original - Otimizado) / Original) * 100
-    const gainPercent = beforeVal > 0 
-      ? ((beforeVal - afterVal) / beforeVal) * 100 
-      : 0;
+    // 2. Convertemos essa Distância Base para a métrica ativa para ter o "beforeVal" real
+    let beforeVal = 0;
+    const speedMS = 15 * 0.51444; // 15kt para m/s (conforme sua metodologia)
+
+    switch (activeMetric) {
+      case 'distance':
+        beforeVal = beforeDist;
+        break;
+      case 'time':
+        beforeVal = beforeDist / speedMS;
+        break;
+      case 'fuel':
+        const timeBase = beforeDist / speedMS;
+        beforeVal = (timeBase * factors.fuelRate) / 3600;
+        break;
+      case 'co2':
+        const fuelBase = ((beforeDist / speedMS) * factors.fuelRate) / 3600;
+        beforeVal = fuelBase * 3.15;
+        break;
+    }
+
+    // 3. O ganho percentual é: (Ganho Absoluto / Valor Base) * 100
+    const absoluteGain = gains.total[activeMetric];
+    const gainPercent = beforeVal > 0 ? (absoluteGain / beforeVal) * 100 : 0;
 
     return {
       pista,
       gains,
-      gainPercent: Number(gainPercent.toFixed(2)) // Precisão de 2 casas decimais
+      gainPercent
     };
   });
 
-  // Ordenação dinâmica: sempre o maior ganho percentual no topo
+  // Ordenação: Maior percentual no topo
   const sortedResults = [...results].sort((a, b) => b.gainPercent - a.gainPercent);
 
   const renderMedal = (rank: number) => {
