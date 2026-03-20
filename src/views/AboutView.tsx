@@ -36,7 +36,7 @@ export default function AboutView() {
     </ul>
 
     <p>
-      Dessa forma, este projeto serve como um <strong>painel de governança</strong> que valida o progresso das Fases 1A a 1C — abrangendo desde a eficiência de pista (HIRO) até a implementação de separações mínimas reduzidas (RRSM) — transformando diagnósticos técnicos em indicadores claros de performance e competitividade para o mercado de aviação nacional.
+      Dessa forma, este projeto serve como um <strong>painel de governança</strong> que valida o progresso das Fases 1A a 1D — abrangendo desde a eficiência de pista (HIRO) até a implementação de separações mínimas reduzidas (RRSM) — transformando diagnósticos técnicos em indicadores claros de performance e competitividade para o mercado de aviação nacional.
     </p>
   </div>
 </section>

@@ -38,6 +38,9 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
         <p className="text-text-muted">
           Configure os fatores utilizados para os cálculos de eficiência operacional.
         </p>
+        <p className="text-text-muted text-sm italic">
+          Essas configurações serão utilizadas em todas as telas, mas são temporárias e serão perdidas ao fechar o aplicativo.
+        </p>
       </section>
 
       <Modal 

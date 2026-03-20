@@ -221,23 +221,29 @@ export default function DataView({
                 onChange={(v) => setNewPista({...newPista, arr_taxiway: v})}
               />
               
-              <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl">
+              <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-slate-100 rounded-xl">
+                 <FormField label="DIST DEP CAB (m)" type="number" value={newPista.dist_dep_cabeceira} onChange={(v) => setNewPista({...newPista, dist_dep_cabeceira: Number(v)})} />
                  <FormField label="ROT DEP CAB (s)" type="number" value={newPista.rot_dep_cabeceira} onChange={(v) => setNewPista({...newPista, rot_dep_cabeceira: Number(v)})} />
-                 <FormField label="ROT DEP INT (s)" type="number" value={newPista.rot_dep_intersecao} onChange={(v) => setNewPista({...newPista, rot_dep_intersecao: Number(v)})} />
                  <FormField label="TAXI DEP CAB (m)" type="number" value={newPista.taxi_dep_cabeceira} onChange={(v) => setNewPista({...newPista, taxi_dep_cabeceira: Number(v)})} />
+                 <FormField label="DIST DEP INT (m)" type="number" value={newPista.dist_dep_intersecao} onChange={(v) => setNewPista({...newPista, dist_dep_intersecao: Number(v)})} />
+                 <FormField label="ROT DEP INT (s)" type="number" value={newPista.rot_dep_intersecao} onChange={(v) => setNewPista({...newPista, rot_dep_intersecao: Number(v)})} />
                  <FormField label="TAXI DEP INT (m)" type="number" value={newPista.taxi_dep_intersecao} onChange={(v) => setNewPista({...newPista, taxi_dep_intersecao: Number(v)})} />
               </div>
 
-              <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gain-light/5 rounded-xl">
+              <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-gain-light/20 rounded-xl">
+                 <FormField label="DIST ARR CAB (m)" type="number" value={newPista.dist_arr_cabeceira} onChange={(v) => setNewPista({...newPista, dist_arr_cabeceira: Number(v)})} />
                  <FormField label="ROT ARR CAB (s)" type="number" value={newPista.rot_arr_cabeceira} onChange={(v) => setNewPista({...newPista, rot_arr_cabeceira: Number(v)})} />
-                 <FormField label="ROT ARR INT (s)" type="number" value={newPista.rot_arr_intersecao} onChange={(v) => setNewPista({...newPista, rot_arr_intersecao: Number(v)})} />
                  <FormField label="TAXI ARR CAB (m)" type="number" value={newPista.taxi_arr_cabeceira} onChange={(v) => setNewPista({...newPista, taxi_arr_cabeceira: Number(v)})} />
+                 <FormField label="DIST ARR INT (m)" type="number" value={newPista.dist_arr_intersecao} onChange={(v) => setNewPista({...newPista, dist_arr_intersecao: Number(v)})} />
+                 <FormField label="ROT ARR INT (s)" type="number" value={newPista.rot_arr_intersecao} onChange={(v) => setNewPista({...newPista, rot_arr_intersecao: Number(v)})} />
                  <FormField label="TAXI ARR INT (m)" type="number" value={newPista.taxi_arr_intersecao} onChange={(v) => setNewPista({...newPista, taxi_arr_intersecao: Number(v)})} />
               </div>
 
-              <div className="md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-sidebar/5 rounded-xl border border-sidebar/10">
-                <FormField label="OMNI ANTERIOR (ft" type="number" value={newPista.omni_antiga} onChange={(v) => setNewPista({...newPista, omni_antiga: Number(v)})} />
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-sidebar/5 rounded-xl border border-sidebar/10">
+                <FormField label="OMNI ANTERIOR (ft)" type="number" value={newPista.omni_antiga} onChange={(v) => setNewPista({...newPista, omni_antiga: Number(v)})} />
                 <FormField label="OMNI OTIMIZADA (ft)" type="number" value={newPista.omni_otimizada} onChange={(v) => setNewPista({...newPista, omni_otimizada: Number(v)})} />
+              </div>
+              <div className="md:col-span-1 grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-sidebar/5 rounded-xl border border-sidebar/10">
                 <div className="flex items-center gap-2 p-2 mt-4 sm:mt-6">
                   <input 
                     type="checkbox" 
@@ -287,6 +293,7 @@ export default function DataView({
                   <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">TWY</th>
                   <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">ROT (C/I)</th>
                   <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">TAXI (C/I)</th>
+                  <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">DIST (C/I)</th>
                   <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">OMNI (A/O)</th>
                   <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ações</th>
                 </tr>
@@ -324,7 +331,11 @@ export default function DataView({
                        <ValueCompare c={item.taxi_arr_cabeceira} i={item.taxi_arr_intersecao} unit="m" />
                     </td>
                     <td className="py-4 px-6 text-center">
-                       <ValueCompare c={item.omni_antiga} i={item.omni_otimizada} unit="s" />
+                       <ValueCompare c={item.dist_dep_cabeceira} i={item.dist_dep_intersecao} unit="m" />
+                       <ValueCompare c={item.dist_arr_cabeceira} i={item.dist_arr_intersecao} unit="m" />
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                       <ValueCompare c={item.omni_antiga} i={item.omni_otimizada} unit="ft" />
                     </td>
                     <td className="py-4 px-6 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

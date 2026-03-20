@@ -51,9 +51,19 @@ export default function App() {
   const [activeAerodromeId, setActiveAerodromeId] = useState<number | null>(null);
 
   React.useEffect(() => {
-    aerodromeService.getAerodromos().then(data => {
-      setAerodromos(data);
-      if (data.length > 0) setActiveAerodromeId(data[0].id);
+    Promise.all([
+      aerodromeService.getAerodromos(),
+      aerodromeService.getPistasConfiguracao()
+    ]).then(([aeros, pistas]) => {
+      // Filtrar apenas aeródromos que possuem pelo menos uma pista cadastrada
+      const withPistas = aeros.filter(a => 
+        pistas.some(p => p.aerodromo_id === a.id)
+      );
+      
+      setAerodromos(withPistas);
+      if (withPistas.length > 0) {
+        setActiveAerodromeId(withPistas[0].id);
+      }
     });
   }, []);
 
@@ -165,7 +175,7 @@ export default function App() {
 
             {/* Etapa Selector */}
             <div className="flex items-center bg-surface-low rounded-lg p-1 gap-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase px-2">ETAPA:</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase px-2">FASE:</span>
               {(['DEP', 'ARR'] as EtapaType[]).map(e => (
                 <button 
                   key={e}

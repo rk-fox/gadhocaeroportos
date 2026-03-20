@@ -210,7 +210,7 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px flex-1 bg-slate-200"></div>
-              <h4 className="text-sm font-black text-sidebar uppercase tracking-widest px-4 py-1 bg-surface-low rounded-full border border-slate-200">
+              <h4 className="text-sm font-black text-gain uppercase tracking-widest px-4 py-1 bg-gain-light/10 rounded-full border border-gain/20">
                 Ganhos em Decolagem (DEP)
               </h4>
               <div className="h-px flex-1 bg-slate-200"></div>

@@ -45,32 +45,49 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
 
   // Calculate results for all records
   const results = allPistas.map(pista => {
-    const gains = calculateGains(pista, factors, scale, activeEtapa);
+    // 1. O ranking usa escala 1 para comparar eficiência por voo (independente do volume total)
+    const rankingScale = 1;
+    const gains = calculateGains(pista, factors, rankingScale, activeEtapa);
     
-    // 1. Calculamos a Distância Base (Baseline) dependendo da etapa
-    const beforeDist = activeEtapa === 'DEP' 
-      ? (pista.taxi_dep_cabeceira + pista.rot_dep_cabeceira + pista.omni_antiga)
-      : (pista.taxi_arr_cabeceira + pista.rot_arr_cabeceira);
-
-    // 2. Convertemos essa Distância Base para a métrica ativa para ter o "beforeVal" real
+    // 2. Calculamos o cenário base (Baseline) detalhado por fase para bater com a lógica do ganho
     let beforeVal = 0;
-    const speedMS = 15 * 0.51444; // 15kt para m/s (conforme sua metodologia)
+    
+    if (activeEtapa === 'DEP') {
+      // DEP Phases: Taxi DEP + Decolagem + Omni (Antiga)
+      const taxiTime = pista.taxi_dep_cabeceira / factors.taxiSpeed;
+      const taxiDist = pista.taxi_dep_cabeceira;
+      const taxiFuel = taxiTime * factors.taxiFuelRate;
 
-    switch (activeMetric) {
-      case 'distance':
-        beforeVal = beforeDist;
-        break;
-      case 'time':
-        beforeVal = beforeDist / speedMS;
-        break;
-      case 'fuel':
-        const timeBase = beforeDist / speedMS;
-        beforeVal = (timeBase * factors.fuelRate) / 3600;
-        break;
-      case 'co2':
-        const fuelBase = ((beforeDist / speedMS) * factors.fuelRate) / 3600;
-        beforeVal = fuelBase * 3.15;
-        break;
+      const depTime = pista.rot_dep_cabeceira;
+      const depDist = pista.dist_dep_cabeceira;
+      const depFuel = depTime * factors.depFuelRate;
+
+      const omniTime = (pista.omni_antiga / factors.omniClimbRate) * 60;
+      const omniDist = (omniTime / 3600 * factors.omniSpeed) * 1.852 * 1000;
+      const omniFuel = omniTime * factors.omniFuelRate;
+
+      switch (activeMetric) {
+        case 'distance': beforeVal = taxiDist + depDist + omniDist; break;
+        case 'time':     beforeVal = taxiTime + depTime + omniTime; break;
+        case 'fuel':     beforeVal = taxiFuel + depFuel + omniFuel; break;
+        case 'co2':      beforeVal = (taxiFuel + depFuel + omniFuel) * factors.co2Factor; break;
+      }
+    } else {
+      // ARR Phases: Decolagem (Pouso) + Taxi ARR
+      const arrTime = pista.rot_arr_cabeceira;
+      const arrDist = pista.dist_arr_cabeceira;
+      const arrFuel = arrTime * factors.arrFuelRate;
+
+      const taxiTime = pista.taxi_arr_cabeceira / factors.taxiSpeed;
+      const taxiDist = pista.taxi_arr_cabeceira;
+      const taxiFuel = taxiTime * factors.taxiFuelRate;
+
+      switch (activeMetric) {
+        case 'distance': beforeVal = taxiDist + arrDist; break;
+        case 'time':     beforeVal = taxiTime + arrTime; break;
+        case 'fuel':     beforeVal = taxiFuel + arrFuel; break;
+        case 'co2':      beforeVal = (taxiFuel + arrFuel) * factors.co2Factor; break;
+      }
     }
 
     // 3. O ganho percentual é: (Ganho Absoluto / Valor Base) * 100
@@ -190,7 +207,7 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
             <div className="space-y-4">
               <div className="bg-surface-low p-4 rounded-lg border-l-4 border-sidebar">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Cenário Ativo</span>
-                <span className="text-sm font-bold text-text-main block">Etapa de {activeEtapa}</span>
+                <span className="text-sm font-bold text-text-main block">Fase de {activeEtapa}</span>
               </div>
               
               <div className="p-4 rounded-lg border border-slate-100 shadow-sm bg-gain-light/5">

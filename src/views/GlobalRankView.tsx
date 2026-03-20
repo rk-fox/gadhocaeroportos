@@ -33,7 +33,9 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
             pista: p,
             aerodromo: aero!
           };
-        }).filter(item => item.aerodromo); // Ensure aerodrome exists
+        })
+        .filter(item => item.aerodromo) // Ensure aerodrome exists
+        .sort((a, b) => a.aerodromo.indicativo.localeCompare(b.aerodromo.indicativo));
 
         setData(mappedData);
       } catch (error) {
@@ -79,7 +81,7 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
           <div className="min-w-[800px] flex items-end justify-around gap-8 px-10 pt-32 pb-12 border-b border-slate-100 h-full">
             {data.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center py-20 text-slate-300">
-                 <span className="text-sm font-bold uppercase tracking-widest">Nenhuma pista destaque configurada</span>
+                 <span className="text-sm font-bold uppercase tracking-widest">Nenhuma pista preferencial configurada</span>
               </div>
             ) : data.map((item) => {
               const calculateScenarioTotal = (pista: PistaConfiguracao, scenario: 'base' | 'optimized') => {
@@ -194,9 +196,13 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
                 <Info size={18} className="text-slate-400" />
              </div>
              <p className="text-[11px] text-text-muted leading-relaxed uppercase font-medium">
-               Análise comparativa normalizada utilizando as **Pistas Destaque** (Designated Runways). 
+               Análise comparativa normalizada utilizando as **Pistas Preferenciais**. 
                A altura total de cada coluna representa 100% da operação base no aeródromo. 
-               O segmento inferior detalha a operação otimizada e o segmento superior destaca a redução direta em {activeMetric}.
+               O segmento inferior detalha a operação otimizada e o segmento superior destaca a redução direta em {
+                  activeMetric === 'distance' ? 'DISTÂNCIA' : 
+                  activeMetric === 'time' ? 'TEMPO' : 
+                  activeMetric === 'fuel' ? 'COMBUSTÍVEL' : 'CO2'
+                }.
              </p>
           </div>
         </div>

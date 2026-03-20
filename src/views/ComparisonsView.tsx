@@ -172,12 +172,15 @@ export default function ComparisonsView({ scale, factors, activeMetric, activeAe
                 <>
                   <DetailItem label="TWY DEP" value={selectedPista.dep_taxiway} />
                   <DetailItem label="Dist. DEP (Cab/Int)" value={`${selectedPista.dist_dep_cabeceira}m / ${selectedPista.dist_dep_intersecao}m`} />
+                  <DetailItem label="Taxi DEP (Cab/Int)" value={`${selectedPista.taxi_dep_cabeceira}m / ${selectedPista.taxi_dep_intersecao}m`} />
                   <DetailItem label="ROT DEP (Cab/Int)" value={`${selectedPista.rot_dep_cabeceira}s / ${selectedPista.rot_dep_intersecao}s`} />
+                  <DetailItem label="OMNI (Ant/Otim)" value={`${selectedPista.omni_antiga}ft / ${selectedPista.omni_otimizada}ft`} />
                 </>
               ) : (
                 <>
                   <DetailItem label="TWY ARR" value={selectedPista.arr_taxiway} />
                   <DetailItem label="Dist. ARR (Cab/Int)" value={`${selectedPista.dist_arr_cabeceira}m / ${selectedPista.dist_arr_intersecao}m`} />
+                  <DetailItem label="Taxi ARR (Cab/Int)" value={`${selectedPista.taxi_arr_cabeceira}m / ${selectedPista.taxi_arr_intersecao}m`} />
                   <DetailItem label="ROT ARR (Cab/Int)" value={`${selectedPista.rot_arr_cabeceira}s / ${selectedPista.rot_arr_intersecao}s`} />
                 </>
               )}
