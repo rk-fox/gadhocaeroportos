@@ -76,7 +76,7 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
         </div>
 
         <div className="flex-1 overflow-x-auto">
-          <div className="min-w-[800px] flex items-end justify-around gap-8 px-10 pt-36 pb-12 border-b border-slate-100 h-full">
+          <div className="min-w-[800px] flex items-end justify-around gap-8 px-10 pt-32 pb-12 border-b border-slate-100 h-full">
             {data.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center py-20 text-slate-300">
                  <span className="text-sm font-bold uppercase tracking-widest">Nenhuma pista destaque configurada</span>
