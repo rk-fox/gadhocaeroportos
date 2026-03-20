@@ -84,7 +84,7 @@ export default function DashboardView({
           {activeAerodrome?.nome} - {activeAerodrome?.concessionaria} - {activeAerodrome?.cidade}/{activeAerodrome?.estado}
         </p>
         <p className="text-text-muted">
-          Economia potencial estimada acumulada para {scale} voos na pista {activePista?.pista_identificador} ({activeEtapa}).
+          Economia potencial estimada acumulada para {scale} voo(s) na pista {activePista?.pista_identificador} ({activeEtapa}).
         </p>
       </section>
 
