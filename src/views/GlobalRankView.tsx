@@ -67,7 +67,7 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
         </p>
       </section>
 
-      <div className="bg-surface-card p-10 rounded-2xl shadow-sm border border-slate-100 min-h-[600px] flex flex-col">
+      <div className="bg-surface-card p-10 rounded-2xl shadow-sm border border-slate-100 min-h-[570px] flex flex-col">
         <div className="flex items-center gap-3 mb-12">
           <div className="p-2 bg-gain-light/10 rounded-lg text-gain">
             <Trophy size={20} />
