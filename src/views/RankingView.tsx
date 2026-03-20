@@ -1,33 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Medal, MapPin, Clock, Fuel, Wind, Maximize } from 'lucide-react';
-import { AIRPORT_DATA } from '../data/airportData';
+import { Trophy, Medal, MapPin, Clock, Fuel, Wind, Maximize, TrendingUp } from 'lucide-react';
 import { calculateGains, CalculationFactors } from '../utils/calculations';
-import { MetricType } from '../App';
+import { MetricType, EtapaType } from '../App';
+import { aerodromeService, Aerodromo, PistaConfiguracao } from '../utils/aerodromeService';
+import { Tooltip } from '../components/Shared';
 
 interface RankingViewProps {
   scale: number;
   factors: CalculationFactors;
-  globalMetric?: MetricType;
+  activeMetric: MetricType;
+  activeEtapa: EtapaType;
+  activeAerodromeId: number;
+  activeAerodrome?: Aerodromo;
 }
 
-export default function RankingView({ scale, factors, globalMetric }: RankingViewProps) {
-  const [activeMetric, setActiveMetric] = useState<MetricType>(globalMetric || 'fuel');
+export default function RankingView({ scale, factors, activeMetric, activeEtapa }: RankingViewProps) {
+  const [allPistas, setAllPistas] = useState<(PistaConfiguracao & { aerodromo?: Aerodromo })[]>([]);
+  const [aerodromos, setAerodromos] = useState<Aerodromo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Sync with global metric if it changes
   useEffect(() => {
-    if (globalMetric) {
-      setActiveMetric(globalMetric);
-    }
-  }, [globalMetric]);
+    const fetchData = async () => {
+      try {
+        const [aeros, pistas] = await Promise.all([
+          aerodromeService.getAerodromos(),
+          aerodromeService.getPistasConfiguracao()
+        ]);
+        setAerodromos(aeros);
+        
+        const pistasWithAero = pistas.map(p => ({
+          ...p,
+          aerodromo: aeros.find(a => a.id === p.aerodromo_id)
+        }));
+        
+        setAllPistas(pistasWithAero);
+      } catch (error) {
+        console.error('Error fetching ranking data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Calculate results for all records
-  const results = AIRPORT_DATA.map(item => ({
-    item,
-    gains: calculateGains(item, factors, scale)
-  }));
+  const results = allPistas.map(pista => {
+    const gains = calculateGains(pista, factors, scale, activeEtapa);
+    
+    let beforeVal = 0;
+    let afterVal = 0;
+    
+    if (activeEtapa === 'DEP') {
+      beforeVal = pista.taxi_dep_cabeceira + pista.rot_dep_cabeceira + pista.omni_antiga;
+      afterVal = pista.taxi_dep_intersecao + pista.rot_dep_intersecao + pista.omni_otimizada;
+    } else {
+      beforeVal = pista.taxi_arr_cabeceira + pista.rot_arr_cabeceira;
+      afterVal = pista.taxi_arr_intersecao + pista.rot_arr_intersecao;
+    }
 
-  // Sort by active metric
-  const sortedResults = [...results].sort((a, b) => b.gains.total[activeMetric] - a.gains.total[activeMetric]);
+    const gainPercent = beforeVal > 0 ? ((beforeVal - afterVal) / beforeVal) * 100 : 0;
+
+    return {
+      pista,
+      gains,
+      gainPercent
+    };
+  });
+
+  // Sort by gain percentage
+  const sortedResults = [...results].sort((a, b) => b.gainPercent - a.gainPercent);
 
   const renderMedal = (rank: number) => {
     if (rank === 1) return <Medal size={20} className="text-yellow-500" />;
@@ -45,53 +86,27 @@ export default function RankingView({ scale, factors, globalMetric }: RankingVie
     }
   };
 
-  const getMetricIcon = (type: MetricType) => {
-    switch (type) {
-      case 'time': return <Clock size={14} />;
-      case 'fuel': return <Fuel size={14} />;
-      case 'co2': return <Wind size={14} />;
-      case 'distance': return <Maximize size={14} />;
-    }
-  };
+  if (isLoading) return <div className="flex items-center justify-center h-64">Carregando ranking...</div>;
 
   return (
     <div className="max-w-7xl mx-auto">
-      <section className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-3xl font-display font-extrabold text-text-main tracking-tight leading-none mb-2">
-            Ranking de Eficiência
-          </h2>
-          <p className="text-text-muted">
-            Impacto potencial de otimização por aeródromo e pista.
-          </p>
-        </div>
-
-        <div className="flex bg-surface-low p-1 rounded-xl border border-slate-200 shadow-inner">
-          {(['time', 'fuel', 'co2', 'distance'] as MetricType[]).map((m) => (
-            <button
-              key={m}
-              onClick={() => setActiveMetric(m)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeMetric === m 
-                  ? 'bg-white text-gain shadow-sm' 
-                  : 'text-text-muted hover:text-text-main'
-              }`}
-            >
-              {getMetricIcon(m)}
-              {getMetricLabel(m).split(' ')[0]}
-            </button>
-          ))}
-        </div>
+      <section className="mb-10">
+        <h2 className="text-3xl font-display font-extrabold text-text-main tracking-tight leading-none mb-2">
+          Ranking de Melhorias ({activeEtapa})
+        </h2>
+        <p className="text-text-muted">
+          Comparação por percentual de ganho entre aeródromos e pistas.
+        </p>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Leaderboard */}
         <div className="lg:col-span-2 bg-surface-card p-8 rounded-xl shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-surface-low rounded-lg text-text-main">
+            <div className="p-2 bg-surface-low rounded-lg text-sidebar shadow-inner">
               <Trophy size={24} />
             </div>
-            <h3 className="text-xl font-display font-bold text-text-main">Top Otimizações</h3>
+            <h3 className="text-xl font-display font-bold text-text-main">Melhores Aproveitamentos</h3>
           </div>
 
           <div className="overflow-x-auto">
@@ -99,35 +114,41 @@ export default function RankingView({ scale, factors, globalMetric }: RankingVie
               <thead>
                 <tr className="border-b border-slate-200">
                   <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest w-16 text-center">Rank</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Aeródromo / Pista</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Potencial de Ganho</th>
+                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">AERÓDROMO / PISTA</th>
+                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right whitespace-nowrap">GANHO (%)</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedResults.map((res, index) => (
-                  <tr key={`${res.item.aerodrome}-${res.item.runway}`} className="border-b border-slate-100 last:border-0 hover:bg-surface-low transition-colors group">
+                  <tr 
+                    key={res.pista.id} 
+                    className="border-b border-slate-100 last:border-0 hover:bg-surface-low transition-colors group cursor-help"
+                  >
                     <td className="py-4 px-4 flex justify-center items-center">
                       {renderMedal(index + 1)}
                     </td>
                     <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 transition-colors group-hover:bg-gain-light/20 group-hover:text-gain">
-                          {res.item.aerodrome}
+                      <Tooltip content={`Ganho Bruto: ${res.gains.total[activeMetric].toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ${getMetricLabel(activeMetric).split(' ')[1] || ''}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 transition-colors group-hover:bg-gain-light/20 group-hover:text-gain">
+                            {res.pista.aerodromo?.indicativo}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-text-main text-sm">Pista {res.pista.pista_identificador}</span>
+                            <span className="text-[10px] text-text-muted uppercase tracking-wider">{res.pista.dep_taxiway} / {res.pista.arr_taxiway}</span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-text-main text-sm">Pista {res.item.runway}</span>
-                          <span className="text-[10px] text-text-muted uppercase tracking-wider">{res.item.taxiway_dep} / {res.item.taxiway_arr}</span>
-                        </div>
-                      </div>
+                      </Tooltip>
                     </td>
                     <td className="py-4 px-4 text-right">
                       <div className="inline-flex flex-col items-end">
                         <span className="text-lg font-display font-bold text-gain">
-                          {res.gains.total[activeMetric].toLocaleString('pt-BR', { maximumFractionDigits: 1 })}
+                          {res.gainPercent.toFixed(1)}%
                         </span>
-                        <span className="text-[10px] font-medium text-text-muted uppercase tracking-tighter">
-                          {getMetricLabel(activeMetric).split(' ')[1] || getMetricLabel(activeMetric)}
-                        </span>
+                        <div className="flex items-center gap-1 text-[10px] text-text-muted">
+                           <TrendingUp size={10} className="text-gain-light" />
+                           <span>EFICIÊNCIA</span>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -141,30 +162,37 @@ export default function RankingView({ scale, factors, globalMetric }: RankingVie
         <div className="bg-surface-card p-8 rounded-xl shadow-sm border border-slate-100 flex flex-col">
           <h3 className="text-lg font-display font-bold text-text-main mb-6 flex items-center gap-2">
             <MapPin size={20} className="text-gain" />
-            Análise por Recurso
+            Critério de Ranking
           </h3>
           
           <div className="flex-1 space-y-6">
             <p className="text-sm text-text-muted mb-4 leading-relaxed">
-              O ranking destaca os recursos aeroportuários com maior potencial de economia através da adoção de procedimentos otimizados.
+              O ranking utiliza o <strong>percentual de melhoria</strong> em relação ao cenário base para garantir uma comparação justa entre aeródromos de diferentes portes.
             </p>
             
             <div className="space-y-4">
-              <div className="bg-surface-low p-4 rounded-lg border-l-4 border-gain">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Métrica Ativa</span>
-                <span className="text-sm font-bold text-text-main block">{getMetricLabel(activeMetric)}</span>
+              <div className="bg-surface-low p-4 rounded-lg border-l-4 border-sidebar">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Cenário Ativo</span>
+                <span className="text-sm font-bold text-text-main block">Etapa de {activeEtapa}</span>
               </div>
               
+              <div className="p-4 rounded-lg border border-slate-100 shadow-sm bg-gain-light/5">
+                <h4 className="text-xs font-bold text-gain uppercase mb-2">Dica Operacional</h4>
+                <p className="text-[11px] text-text-muted italic">
+                  Passe o mouse sobre o rank da tabela para visualizar os valores brutos de economia em {getMetricLabel(activeMetric)}.
+                </p>
+              </div>
+
               <div className="p-4 rounded-lg border border-slate-100">
-                <h4 className="text-xs font-bold text-text-main uppercase mb-2">Resumo Geral</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-text-muted">Total Aeródromos</span>
-                    <span className="font-bold">2</span>
+                <h4 className="text-xs font-bold text-text-main uppercase mb-2">Estatísticas</h4>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Aeródromos</span>
+                    <span className="font-bold">{aerodromos.length}</span>
                   </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-text-muted">Total Pistas</span>
-                    <span className="font-bold">{AIRPORT_DATA.length}</span>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Pistas Analisadas</span>
+                    <span className="font-bold">{allPistas.length}</span>
                   </div>
                 </div>
               </div>

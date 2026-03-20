@@ -1,4 +1,5 @@
-import { AirportRunwayData } from '../data/airportData';
+import { PistaConfiguracao } from './aerodromeService';
+import { EtapaType } from '../App';
 
 export interface CalculationFactors {
   taxiSpeed: number;      // m/s
@@ -39,7 +40,12 @@ export interface DetailedGainResult {
   total: GainResult;
 }
 
-export function calculateGains(item: AirportRunwayData, factors: CalculationFactors, scale: number = 1): DetailedGainResult {
+export function calculateGains(
+  item: PistaConfiguracao, 
+  factors: CalculationFactors, 
+  scale: number = 1,
+  etapa?: EtapaType
+): DetailedGainResult {
   const calculateResult = (timeS: number, fuelRate: number, distanceM: number): GainResult => {
     const time = Math.max(0, timeS) * scale;
     const distance = Math.max(0, distanceM) * scale;
@@ -48,41 +54,41 @@ export function calculateGains(item: AirportRunwayData, factors: CalculationFact
     return { category: '', time, fuel, distance, co2 };
   };
 
-  // DEP Gain
-  const dep = calculateResult(
-    item.rot_dep_cab - item.rot_dep_int,
+  const emptyResult = (): GainResult => ({ category: '', time: 0, fuel: 0, distance: 0, co2: 0 });
+
+  // DEP Gain (only if Etapa is DEP or not specified)
+  const dep = (etapa === 'ARR') ? emptyResult() : calculateResult(
+    item.rot_dep_cabeceira - item.rot_dep_intersecao,
     factors.depFuelRate,
-    item.dist_dep_cab - item.dist_dep_int
+    item.dist_dep_cabeceira - item.dist_dep_intersecao
   );
   dep.category = 'Decolagem';
 
-  // ARR Gain
-  const arr = calculateResult(
-    item.rot_arr_cab - item.rot_arr_int,
+  // ARR Gain (only if Etapa is ARR or not specified)
+  const arr = (etapa === 'DEP') ? emptyResult() : calculateResult(
+    item.rot_arr_cabeceira - item.rot_arr_intersecao,
     factors.arrFuelRate,
-    item.dist_arr_cab - item.dist_arr_int
+    item.dist_arr_cabeceira - item.dist_arr_intersecao
   );
   arr.category = 'Pouso';
 
-  // TAXI DEP Gain
-  const taxiDepDist = Math.max(0, item.taxi_dep_cab - item.taxi_dep_int);
+  // TAXI DEP Gain (only if Etapa is DEP or not specified)
+  const taxiDepDist = Math.max(0, item.taxi_dep_cabeceira - item.taxi_dep_intersecao);
   const taxiDepTime = taxiDepDist / factors.taxiSpeed;
-  const taxiDep = calculateResult(taxiDepTime, factors.taxiFuelRate, taxiDepDist);
+  const taxiDep = (etapa === 'ARR') ? emptyResult() : calculateResult(taxiDepTime, factors.taxiFuelRate, taxiDepDist);
   taxiDep.category = 'Taxi DEP';
 
-  // TAXI ARR Gain
-  const taxiArrDist = Math.max(0, item.taxi_arr_cab - item.taxi_arr_int);
+  // TAXI ARR Gain (only if Etapa is ARR or not specified)
+  const taxiArrDist = Math.max(0, item.taxi_arr_cabeceira - item.taxi_arr_intersecao);
   const taxiArrTime = taxiArrDist / factors.taxiSpeed;
-  const taxiArr = calculateResult(taxiArrTime, factors.taxiFuelRate, taxiArrDist);
+  const taxiArr = (etapa === 'DEP') ? emptyResult() : calculateResult(taxiArrTime, factors.taxiFuelRate, taxiArrDist);
   taxiArr.category = 'Taxi ARR';
 
-  // OMNI Gain
-  // Time (s) = ( (H_old - H_opt) / 2500 ) * 60
-  const omniDiffH = item.omni_old - item.omni_opt;
+  // OMNI Gain (only if Etapa is DEP or not specified - based on user description DEP = omni)
+  const omniDiffH = item.omni_antiga - item.omni_otimizada;
   const omniTimeS = (omniDiffH / factors.omniClimbRate) * 60;
-  // Distance (m) = (Time_s / 3600 * Speed_kt) * 1.852 * 1000
   const omniDistM = (omniTimeS / 3600 * factors.omniSpeed) * 1.852 * 1000;
-  const omni = calculateResult(omniTimeS, factors.omniFuelRate, omniDistM);
+  const omni = (etapa === 'ARR') ? emptyResult() : calculateResult(omniTimeS, factors.omniFuelRate, omniDistM);
   omni.category = 'OMNI';
 
   // Total

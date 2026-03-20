@@ -1,64 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Activity, Clock, Fuel, Wind, Maximize, BarChart3, Calculator } from 'lucide-react';
-import { AIRPORT_DATA } from '../data/airportData';
 import { calculateGains, CalculationFactors } from '../utils/calculations';
+import { EtapaType, MetricType } from '../App';
+import { aerodromeService, Aerodromo, PistaConfiguracao } from '../utils/aerodromeService';
+import { Tooltip } from '../components/Shared';
 
 interface SimulatorViewProps {
   scale: number;
   factors: CalculationFactors;
-  activeAerodrome?: string;
+  activeMetric: MetricType;
+  activeAerodromeId: number;
+  activeAerodrome?: Aerodromo;
+  activeEtapa: EtapaType;
 }
 
-export default function SimulatorView({ factors, activeAerodrome = 'SBBR' }: SimulatorViewProps) {
+export default function SimulatorView({ factors, activeAerodromeId, activeAerodrome, activeEtapa }: SimulatorViewProps) {
   const [flightsPerDay, setFlightsPerDay] = useState(50);
   const [daysPerMonth, setDaysPerMonth] = useState(30);
   const [adoptionRate, setAdoptionRate] = useState(80);
-
-  // Calculate potential monthly gain (sum of all runways in the active aerodrome)
-  const airportItems = AIRPORT_DATA.filter(item => item.aerodrome === activeAerodrome);
   
-  const unitGains = airportItems.reduce((acc, item) => {
-    const g = calculateGains(item, factors, 1);
-    acc.time += g.total.time;
-    acc.fuel += g.total.fuel;
-    acc.distance += g.total.distance;
-    acc.co2 += g.total.co2;
-    return acc;
-  }, { time: 0, fuel: 0, distance: 0, co2: 0 });
+  const [pistas, setPistas] = useState<PistaConfiguracao[]>([]);
+  const [selectedPistaId, setSelectedPistaId] = useState<number | null>(null);
 
-  // Average unit gain across runways
-  const avgUnitGain = {
-    time: airportItems.length > 0 ? unitGains.time / airportItems.length : 0,
-    fuel: airportItems.length > 0 ? unitGains.fuel / airportItems.length : 0,
-    distance: airportItems.length > 0 ? unitGains.distance / airportItems.length : 0,
-    co2: airportItems.length > 0 ? unitGains.co2 / airportItems.length : 0,
-  };
+  useEffect(() => {
+    if (activeAerodromeId) {
+      aerodromeService.getPistasConfiguracao(activeAerodromeId).then(data => {
+        setPistas(data);
+        if (data.length > 0) {
+          const highlight = data.find(p => p.destaque);
+          setSelectedPistaId(highlight ? highlight.id : data[0].id);
+        }
+      });
+    }
+  }, [activeAerodromeId]);
 
+  const selectedPista = pistas.find(p => p.id === selectedPistaId);
   const totalMonthlyFlights = flightsPerDay * daysPerMonth * (adoptionRate / 100);
   
-  const monthlySavings = {
-    time: avgUnitGain.time * totalMonthlyFlights,
-    fuel: avgUnitGain.fuel * totalMonthlyFlights,
-    distance: avgUnitGain.distance * totalMonthlyFlights,
-    co2: avgUnitGain.co2 * totalMonthlyFlights,
-  };
+  const unitGainsDEP = selectedPista ? calculateGains(selectedPista, factors, 1, 'DEP') : null;
+  const unitGainsARR = selectedPista ? calculateGains(selectedPista, factors, 1, 'ARR') : null;
+
+  const monthlySavingsDEP = unitGainsDEP ? {
+    time: unitGainsDEP.total.time * totalMonthlyFlights,
+    fuel: unitGainsDEP.total.fuel * totalMonthlyFlights,
+    distance: unitGainsDEP.total.distance * totalMonthlyFlights,
+    co2: unitGainsDEP.total.co2 * totalMonthlyFlights,
+  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
+
+  const monthlySavingsARR = unitGainsARR ? {
+    time: unitGainsARR.total.time * totalMonthlyFlights,
+    fuel: unitGainsARR.total.fuel * totalMonthlyFlights,
+    distance: unitGainsARR.total.distance * totalMonthlyFlights,
+    co2: unitGainsARR.total.co2 * totalMonthlyFlights,
+  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
 
   return (
     <div className="max-w-7xl mx-auto">
-      <section className="mb-10">
-        <h2 className="text-3xl font-display font-extrabold text-text-main tracking-tight leading-none mb-2">
-          Simulador de Impacto Mensal ({activeAerodrome})
-        </h2>
-        <p className="text-text-muted">
-          Projete a economia acumulada baseada no volume de tráfego e taxa de adesão para {activeAerodrome}.
-        </p>
+      <section className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-display font-extrabold text-text-main tracking-tight leading-none mb-2">
+            Simulador de Impacto Mensal ({activeAerodrome?.indicativo})
+          </h2>
+          <p className="text-text-muted">
+            Projete a economia acumulada para a pista selecionada ({activeEtapa}) em {activeAerodrome?.indicativo}.
+          </p>
+        </div>
+
+        {/* Runway Selector internal to the view */}
+        <div className="flex items-center bg-surface-low rounded-lg p-1 gap-1 border border-slate-200 shadow-sm">
+          <span className="text-[10px] font-bold text-slate-400 uppercase px-2">Pista:</span>
+          {pistas.map(p => (
+            <button 
+              key={p.id}
+              onClick={() => setSelectedPistaId(p.id)}
+              className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${selectedPistaId === p.id ? 'bg-white shadow-sm text-gain border border-slate-100' : 'text-text-muted hover:bg-white/50'}`}
+            >
+              {p.pista_identificador}
+            </button>
+          ))}
+        </div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Simulator Controls */}
         <div className="bg-surface-card p-8 rounded-xl shadow-sm border border-slate-100 space-y-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-surface-low rounded-lg text-text-main">
+            <div className="p-2 bg-surface-low rounded-lg text-text-main shadow-inner">
               <Calculator size={20} />
             </div>
             <h3 className="text-lg font-display font-bold text-text-main">Parâmetros da Operação</h3>
@@ -91,52 +118,92 @@ export default function SimulatorView({ factors, activeAerodrome = 'SBBR' }: Sim
 
           <div className="pt-6 border-t border-slate-100">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-slate-400 uppercase">Volume Projetado</span>
-              <span className="text-sm font-bold text-text-main">{totalMonthlyFlights.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/mês</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Volume Projetado</span>
+              <span className="text-sm font-black text-gain">{totalMonthlyFlights.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} voos/mês</span>
             </div>
-            <p className="text-[10px] text-text-muted leading-relaxed">
-              * Considera a média de potencial de economia entre todas as pistas de {activeAerodrome}.
+            <p className="text-[10px] text-text-muted leading-relaxed italic">
+              * Calculado para Pista {selectedPista?.pista_identificador} na etapa de {activeEtapa}.
             </p>
           </div>
         </div>
 
         {/* Projection Results */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ResultCard 
-              label="Economia de Combustível" 
-              value={`${monthlySavings.fuel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
-              icon={<Fuel size={24} className="text-gain" />} 
-            />
-            <ResultCard 
-              label="Redução de CO2" 
-              value={`${monthlySavings.co2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
-              icon={<Wind size={24} className="text-gain" />} 
-            />
-            <ResultCard 
-              label="Tempo de Voo Poupado" 
-              value={`${(monthlySavings.time / 3600).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h`} 
-              icon={<Clock size={24} className="text-gain" />} 
-            />
-            <ResultCard 
-              label="Distância Reduzida" 
-              value={`${(monthlySavings.distance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`} 
-              icon={<Maximize size={24} className="text-gain" />} 
-            />
+        <div className="lg:col-span-2 space-y-12">
+          {/* DEPARTURES */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px flex-1 bg-slate-200"></div>
+              <h4 className="text-sm font-black text-sidebar uppercase tracking-widest px-4 py-1 bg-surface-low rounded-full border border-slate-200">Ganhos em Decolagem (DEP)</h4>
+              <div className="h-px flex-1 bg-slate-200"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Tooltip content="Redução total de distância percorrida em solo e ar (Decolagem).">
+                <ResultCard 
+                  label="Distância Reduzida" 
+                  value={`${(monthlySavingsDEP.distance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`} 
+                  icon={<Maximize size={24} className="text-sidebar" />} 
+                />
+              </Tooltip>
+              <Tooltip content="Tempo total economizado considerando taxi e procedimentos (Decolagem).">
+                <ResultCard 
+                  label="Tempo de Voo Poupado" 
+                  value={`${(monthlySavingsDEP.time / 3600).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h`} 
+                  icon={<Clock size={24} className="text-sidebar" />} 
+                />
+              </Tooltip>
+              <Tooltip content="Economia estimada de combustível (Decolagem).">
+                <ResultCard 
+                  label="Economia de Combustível" 
+                  value={`${monthlySavingsDEP.fuel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
+                  icon={<Fuel size={24} className="text-sidebar" />} 
+                />
+              </Tooltip>
+              <Tooltip content="Redução direta na emissão de CO2 (Decolagem).">
+                <ResultCard 
+                  label="Redução de CO2" 
+                  value={`${monthlySavingsDEP.co2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
+                  icon={<Wind size={24} className="text-sidebar" />} 
+                />
+              </Tooltip>
+            </div>
           </div>
 
-          {/* Chart Placeholder */}
-          <div className="bg-surface-card p-8 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-center items-center min-h-[300px]">
-            <BarChart3 size={48} className="text-slate-200 mb-4" />
-            <span className="text-slate-400 text-sm font-medium">Projeção ({activeAerodrome})</span>
-            <div className="w-full h-32 flex items-end gap-2 mt-8 px-8">
-              {[40, 45, 55, 60, 75, 80, 85, 90, 95, 100, 100, 100].map((h, i) => (
-                <div key={i} className="flex-1 bg-gain-light/30 rounded-t-sm transition-all hover:bg-gain hover:opacity-100" style={{ height: `${h}%` }}></div>
-              ))}
+          {/* ARRIVALS */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px flex-1 bg-slate-200"></div>
+              <h4 className="text-sm font-black text-gain uppercase tracking-widest px-4 py-1 bg-gain-light/10 rounded-full border border-gain/20">Ganhos em Pouso (ARR)</h4>
+              <div className="h-px flex-1 bg-slate-200"></div>
             </div>
-            <div className="w-full flex justify-between mt-2 px-8 text-[10px] font-bold text-slate-400 uppercase">
-              <span>Jan</span>
-              <span>Dez</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Tooltip content="Redução total de distância percorrida em solo e ar (Pouso).">
+                <ResultCard 
+                  label="Distância Reduzida" 
+                  value={`${(monthlySavingsARR.distance / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`} 
+                  icon={<Maximize size={24} className="text-gain" />} 
+                />
+              </Tooltip>
+              <Tooltip content="Tempo total economizado considerando taxi e procedimentos (Pouso).">
+                <ResultCard 
+                  label="Tempo de Voo Poupado" 
+                  value={`${(monthlySavingsARR.time / 3600).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h`} 
+                  icon={<Clock size={24} className="text-gain" />} 
+                />
+              </Tooltip>
+              <Tooltip content="Economia estimada de combustível (Pouso).">
+                <ResultCard 
+                  label="Economia de Combustível" 
+                  value={`${monthlySavingsARR.fuel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
+                  icon={<Fuel size={24} className="text-gain" />} 
+                />
+              </Tooltip>
+              <Tooltip content="Redução direta na emissão de CO2 (Pouso).">
+                <ResultCard 
+                  label="Redução de CO2" 
+                  value={`${monthlySavingsARR.co2.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`} 
+                  icon={<Wind size={24} className="text-gain" />} 
+                />
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -166,7 +233,7 @@ function SliderGroup({ label, value, min, max, onChange, unit, color = 'accent-s
 function ResultCard({ label, value, icon }: any) {
   return (
     <div className="bg-surface-card p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-      <div className="w-12 h-12 rounded-full bg-gain-light/10 flex items-center justify-center">
+      <div className="w-12 h-12 rounded-full bg-gain-light/10 flex items-center justify-center shadow-inner">
         {icon}
       </div>
       <div className="flex flex-col">
