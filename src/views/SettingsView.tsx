@@ -91,44 +91,44 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
             </div>
 
             {/* Inclusão das Fórmulas Matemáticas de Conversão OMNI Corrigidas */}
-            <div className="mt-8 bg-slate-900 p-8 rounded-2xl text-slate-300 shadow-xl border border-slate-800">
-              <h5 className="text-white font-bold mb-6 flex items-center gap-2 uppercase tracking-widest text-xs">
-                <div className="bg-blue-500 p-1 rounded-md"><Calculator size={14} className="text-white" /></div>
-                Conversões Técnicas (Cálculo OMNI)
-              </h5>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="space-y-3">
-                  <p className="text-[10px] font-black text-blue-400 uppercase">1. Tempo de Subida (s)</p>
-                  <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 font-mono text-white text-center text-xs">
-                    {"$$t_{sec} = \\left( \\frac{h}{RoC} \\right) \\times 60$$"}
-                  </div>
-                  <p className="text-[10px] leading-tight italic text-slate-500">
-                    Onde $h$ é a altitude em pés e $RoC$ a razão em ft/min.
-                  </p>
-                </div>
+<div className="mt-8 bg-slate-900 p-8 rounded-2xl text-slate-300 shadow-xl border border-slate-800">
+  <h5 className="text-white font-bold mb-6 flex items-center gap-2 uppercase tracking-widest text-xs">
+    <div className="bg-blue-500 p-1 rounded-md"><Calculator size={14} className="text-white" /></div>
+    Conversões Técnicas (Cálculo OMNI)
+  </h5>
+  
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="space-y-3">
+      <p className="text-[10px] font-black text-blue-400 uppercase">1. Tempo de Subida (s)</p>
+      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 font-mono text-white text-center text-sm">
+        t_seg = (Altitude / Razão_Subida) * 60
+      </div>
+      <p className="text-[10px] leading-tight italic text-slate-500">
+        Altitude em pés (ft) e Razão em ft/min. Resultado em segundos.
+      </p>
+    </div>
 
-                <div className="space-y-3">
-                  <p className="text-[10px] font-black text-blue-400 uppercase">2. Distância Percorrida (NM)</p>
-                  <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 font-mono text-white text-center text-xs">
-                    {"$$d_{NM} = v \\times \\left( \\frac{t_{sec}}{3600} \\right)$$"}
-                  </div>
-                  <p className="text-[10px] leading-tight italic text-slate-500">
-                    Velocidade ($v$ em knots) pelo tempo convertido em fração de hora.
-                  </p>
-                </div>
+    <div className="space-y-3">
+      <p className="text-[10px] font-black text-blue-400 uppercase">2. Distância Percorrida (NM)</p>
+      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 font-mono text-white text-center text-sm">
+        Dist_NM = Velocidade * (t_seg / 3600)
+      </div>
+      <p className="text-[10px] leading-tight italic text-slate-500">
+        Velocidade em knots (kt) multiplicada pelo tempo em horas.
+      </p>
+    </div>
 
-                <div className="space-y-3">
-                  <p className="text-[10px] font-black text-blue-400 uppercase">3. Conversão para Metros</p>
-                  <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 font-mono text-white text-center text-xs">
-                    {"$$d_{m} = d_{NM} \\times 1852$$"}
-                  </div>
-                  <p className="text-[10px] leading-tight italic text-slate-500">
-                    A distância em NM é convertida para o padrão métrico (SI).
-                  </p>
-                </div>
-              </div>
-            </div>
+    <div className="space-y-3">
+      <p className="text-[10px] font-black text-blue-400 uppercase">3. Conversão para Metros</p>
+      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 font-mono text-white text-center text-sm">
+        Dist_m = Dist_NM * 1852
+      </div>
+      <p className="text-[10px] leading-tight italic text-slate-500">
+        Conversão da Milha Náutica para o Sistema Métrico Internacional.
+      </p>
+    </div>
+  </div>
+</div>
           </section>
 
           {/* Section 2: References */}
