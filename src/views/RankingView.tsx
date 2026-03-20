@@ -58,7 +58,7 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
       afterVal = pista.taxi_arr_intersecao + pista.rot_arr_intersecao;
     }
 
-    const gainPercent = beforeVal > 0 ? (1-((beforeVal - afterVal) / beforeVal) * 100) : 0;
+    const gainPercent = beforeVal > 0 ? ((beforeVal - afterVal) / afterVal) * 100 : 0;
 
     return {
       pista,
