@@ -64,7 +64,7 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
                     <p className="text-slate-600">(Dist. Cab. + Taxi Cab. + Omni Antiga) - (Dist. Int. + Taxi Int. + Omni Otimiz.)</p>
                   </div>
                   <ul className="list-disc pl-5 space-y-3 text-xs">
-                    <li><strong>Tempo de Voo:</strong> Distância / Velocidade Média de Voo.</li>
+                    <li><strong>Tempo de Dep/ARR:</strong> Coletas realizadas pelo grupo.</li>
                     <li><strong>Tempo de Taxi:</strong> Distância de Taxi / Velocidade Média de Taxi (15kt).</li>
                     <li><strong>Consumo Total:</strong> Somatório dos tempos (Taxi, DEP e OMNI) x Taxas de Fluxo (BADA).</li>
                   </ul>
@@ -82,8 +82,7 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
                     <p className="text-slate-600">(Dist. Pouso Full + Taxi Cab.) - (Dist. Pouso Otimiz. + Taxi Int.)</p>
                   </div>
                   <ul className="list-disc pl-5 space-y-3 text-xs">
-                    <li><strong>Redução de ROT:</strong> Ganho direto no tempo de ocupação através de saídas rápidas.</li>
-                    <li><strong>PBN/RNP:</strong> Otimização da trajetória lateral e vertical, reduzindo a distância total.</li>
+                    <li><strong>Redução de ROT:</strong> Ganho direto no tempo de ocupação de pista.</li>
                     <li><strong>CO2:</strong> Combustível Total x 3,15 (Fator Estequiométrico ICAO).</li>
                   </ul>
                 </div>
