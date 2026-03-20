@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Fuel, Wind, Maximize, TrendingUp } from 'lucide-react';
+import { Clock, Fuel, Wind, Maximize, TrendingUp, Globe } from 'lucide-react';
 import { KpiCard, BarRow, MetricRow, Tooltip } from '../components/Shared';
 import { calculateGains, CalculationFactors } from '../utils/calculations';
 import { MetricType, EtapaType } from '../App';
@@ -151,6 +151,96 @@ export default function DashboardView({
                 </div>
               </>
             )}
+          </div>
+        </div>
+      </div>
+      {/* Satellite Map Integration */}
+      <div className="mt-12 bg-surface-card rounded-2xl shadow-sm border border-slate-100 overflow-hidden group/map relative">
+        <div className="p-8 pb-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-xl font-display font-bold text-text-main flex items-center gap-2">
+                <Globe size={20} className="text-sidebar" /> 
+                Vista Satélite - {activeAerodrome?.indicativo}
+              </h3>
+              <p className="text-[10px] text-text-muted mt-1 uppercase tracking-widest font-bold">
+                Localização: {activeAerodrome?.latitude.toFixed(4)}, {activeAerodrome?.longitude.toFixed(4)} | Radar de Eficiência - Projeção de Pista ({activeAerodrome?.heading_geral}°)
+              </p>
+            </div>
+            <div className="bg-surface-low px-3 py-1.5 rounded-lg border border-slate-200">
+               <span className="text-[10px] font-black text-sidebar uppercase tracking-widest">Live Preview</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="h-[400px] w-full relative bg-slate-100 flex items-center justify-center overflow-hidden">
+           {/* Static Map Image with Heading Rotation - Normalized with 20-degree offset (Magnetic Declination) */}
+           <div 
+             className="absolute transition-transform duration-[1500ms] ease-in-out"
+             style={{ 
+               transform: `rotate(${110 - (activeAerodrome?.heading_geral || 0)}deg)`,
+               width: '1200px',
+               height: '1200px'
+             }}
+           >
+              {activeAerodrome?.latitude && activeAerodrome?.longitude && (
+                <img 
+                  src={`https://maps.googleapis.com/maps/api/staticmap?center=${activeAerodrome.latitude},${activeAerodrome.longitude}&zoom=${activeAerodrome.zoom || 15}&size=640x640&scale=2&maptype=satellite&key=${import.meta.env.VITE_GOOGLE_MAPS_KEY}`}
+                  alt="Airport Satellite View"
+                  className="w-full h-full object-cover shadow-2xl brightness-90 contrast-110"
+                />
+              )}
+           </div>
+           
+           {/* Futuristic Crosshair Overlays */}
+           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              {/* Central Target */}
+              <div className="w-32 h-32 border border-white/20 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 border border-white/30 rounded-full flex items-center justify-center animate-pulse">
+                  <div className="w-2 h-2 bg-gain-light rounded-full shadow-[0_0_10px_#4edea3]"></div>
+                </div>
+              </div>
+              
+              {/* Scanlines / Grid */}
+              <div className="absolute w-full h-[1px] bg-white/5 top-1/4"></div>
+              <div className="absolute w-full h-[1px] bg-white/5 bottom-1/4"></div>
+              <div className="absolute w-[1px] h-full bg-white/5 left-1/4"></div>
+              <div className="absolute w-[1px] h-full bg-white/5 right-1/4"></div>
+              
+              {/* Coordinate Markings */}
+              <div className="absolute top-8 left-8 text-[8px] font-mono text-white/40 space-y-1">
+                <div>SCN_01: ACTIVE</div>
+                <div>LNK_OK: 99%</div>
+              </div>
+           </div>
+           
+           {/* Dynamic Compass - Adjusted for 110-degree (90+20) normalization */}
+           <div className="absolute top-8 right-8 flex flex-col items-center gap-2">
+              <div className="bg-black/40 backdrop-blur-md p-3 rounded-full border border-white/20 shadow-2xl group flex flex-col items-center">
+                <div 
+                  className="transition-transform duration-[1500ms]"
+                  style={{ transform: `rotate(${110 - (activeAerodrome?.heading_geral || 0)}deg)` }}
+                >
+                   <Wind size={20} className="text-white" />
+                </div>
+                <div className="absolute -top-1 px-1 bg-gain text-[6px] font-black rounded text-black leading-none py-0.5">N</div>
+              </div>
+              <span className="text-[8px] font-bold text-white uppercase tracking-widest bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm">North</span>
+           </div>
+           
+           {/* Vignette effect */}
+           <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.4)] pointer-events-none"></div>
+        </div>
+        
+        <div className="p-6 bg-surface-low border-t border-slate-100 flex justify-between items-center">
+          <p className="text-[10px] text-text-muted font-medium italic uppercase tracking-wider">
+            Orientação horizontal normalizada para o objeto de interesse (Pista) a 90°.
+          </p>
+          <div className="flex gap-4">
+             <div className="flex items-center gap-2 text-[9px] font-bold text-text-main">
+                <div className="w-2 h-2 rounded-full bg-gain"></div>
+                COBERTURA GARANTIDA
+             </div>
           </div>
         </div>
       </div>

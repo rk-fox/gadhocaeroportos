@@ -10,6 +10,7 @@ export interface Aerodromo {
   latitude: number;
   longitude: number;
   heading_geral: number;
+  zoom?: number;
 }
 
 export interface PistaConfiguracao {
