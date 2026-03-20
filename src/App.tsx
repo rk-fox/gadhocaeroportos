@@ -207,10 +207,6 @@ export default function App() {
                 </button>
               ))}
             </div>
-
-            <div className="flex gap-2 ml-4">
-              <button className="p-2 hover:bg-slate-100 rounded-md text-text-muted transition-colors"><Bell size={18} /></button>
-            </div>
           </div>
         </header>
 
