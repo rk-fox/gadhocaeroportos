@@ -275,6 +275,8 @@ export default function DataView({
                 <Search size={18} />
               </div>
               <input
+                id="search-input"
+                name="search"
                 type="text"
                 placeholder="Buscar aeródromo ou pista..."
                 value={searchTerm}
@@ -381,11 +383,14 @@ function DocItem({ title, desc, fields }: { title: string, desc: string, fields:
 }
 
 function FormField({ label, type = 'text', value, onChange, options, placeholder }: any) {
+  const safeId = label ? label.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() : 'field';
   return (
     <div className="space-y-1.5">
-      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</label>
+      <label htmlFor={safeId} className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</label>
       {type === 'select' ? (
         <select 
+          id={safeId}
+          name={safeId}
           value={value} 
           onChange={(e) => onChange(e.target.value)}
           className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-gain/20 outline-none"
@@ -395,6 +400,8 @@ function FormField({ label, type = 'text', value, onChange, options, placeholder
         </select>
       ) : (
         <input 
+          id={safeId}
+          name={safeId}
           type={type} 
           value={value} 
           onChange={(e) => onChange(e.target.value)}

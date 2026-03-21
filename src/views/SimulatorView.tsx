@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Activity, Clock, Fuel, Wind, Maximize, BarChart3, Calculator } from 'lucide-react';
 import { calculateGains, CalculationFactors } from '../utils/calculations';
 import { EtapaType, MetricType } from '../App';
@@ -53,23 +53,28 @@ export default function SimulatorView({ factors, activeAerodromeId, activeAerodr
   const totalSummer = flightsPerDay * 247 * (adoptionRate / 100);
   
   // Ganhos Unitários
-  const unitGainsDEP = selectedPista ? calculateGains(selectedPista, factors, 1, 'DEP') : null;
-  const unitGainsARR = selectedPista ? calculateGains(selectedPista, factors, 1, 'ARR') : null;
+  const unitGainsDEP = useMemo(() => 
+    selectedPista ? calculateGains(selectedPista, factors, 1, 'DEP') : null,
+  [selectedPista, factors]);
+  
+  const unitGainsARR = useMemo(() => 
+    selectedPista ? calculateGains(selectedPista, factors, 1, 'ARR') : null,
+  [selectedPista, factors]);
 
   // Economia Dinâmica (usada nos cards)
-  const savingsDEP = unitGainsDEP ? {
+  const savingsDEP = useMemo(() => unitGainsDEP ? {
     time: unitGainsDEP.total.time * totalFlights,
     fuel: unitGainsDEP.total.fuel * totalFlights,
     distance: unitGainsDEP.total.distance * totalFlights,
     co2: unitGainsDEP.total.co2 * totalFlights,
-  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
+  } : { time: 0, fuel: 0, distance: 0, co2: 0 }, [unitGainsDEP, totalFlights]);
 
-  const savingsARR = unitGainsARR ? {
+  const savingsARR = useMemo(() => unitGainsARR ? {
     time: unitGainsARR.total.time * totalFlights,
     fuel: unitGainsARR.total.fuel * totalFlights,
     distance: unitGainsARR.total.distance * totalFlights,
     co2: unitGainsARR.total.co2 * totalFlights,
-  } : { time: 0, fuel: 0, distance: 0, co2: 0 };
+  } : { time: 0, fuel: 0, distance: 0, co2: 0 }, [unitGainsARR, totalFlights]);
 
   // Títulos dinâmicos
   const tituloPeriodo = periodoSelecionado === 'mes' ? 'Mensal' : periodoSelecionado === 'winter' ? 'Winter' : 'Summer';

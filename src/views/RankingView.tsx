@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Trophy, Medal, MapPin, Clock, Fuel, Wind, Maximize, TrendingUp } from 'lucide-react';
 import { calculateGains, CalculationFactors } from '../utils/calculations';
 import { MetricType, EtapaType } from '../App';
@@ -44,65 +44,61 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
   }, []);
 
   // Calculate results for all records
-  const results = allPistas.map(pista => {
-    // 1. O ranking usa escala 1 para comparar eficiência por voo (independente do volume total)
-    const rankingScale = 1;
-    const gains = calculateGains(pista, factors, rankingScale, activeEtapa);
-    
-    // 2. Calculamos o cenário base (Baseline) detalhado por fase para bater com a lógica do ganho
-    let beforeVal = 0;
-    
-    if (activeEtapa === 'DEP') {
-      // DEP Phases: Taxi DEP + Decolagem + Omni (Antiga)
-      const taxiTime = pista.taxi_dep_cabeceira / factors.taxiSpeed;
-      const taxiDist = pista.taxi_dep_cabeceira;
-      const taxiFuel = taxiTime * factors.taxiFuelRate;
+  const getResultsAndSort = () => {
+    const calculatedResults = allPistas.map(pista => {
+      // 1. O ranking usa escala 1 para comparar eficiência por voo (independente do volume total)
+      const rankingScale = 1;
+      const gains = calculateGains(pista, factors, rankingScale, activeEtapa);
+      
+      // 2. Calculamos o cenário base (Baseline) detalhado por fase para bater com a lógica do ganho
+      let beforeVal = 0;
+      
+      if (activeEtapa === 'DEP') {
+        const taxiTime = pista.taxi_dep_cabeceira / factors.taxiSpeed;
+        const taxiDist = pista.taxi_dep_cabeceira;
+        const taxiFuel = taxiTime * factors.taxiFuelRate;
 
-      const depTime = pista.rot_dep_cabeceira;
-      const depDist = pista.dist_dep_cabeceira;
-      const depFuel = depTime * factors.depFuelRate;
+        const depTime = pista.rot_dep_cabeceira;
+        const depDist = pista.dist_dep_cabeceira;
+        const depFuel = depTime * factors.depFuelRate;
 
-      const omniTime = (pista.omni_antiga / factors.omniClimbRate) * 60;
-      const omniDist = (omniTime / 3600 * factors.omniSpeed) * 1.852 * 1000;
-      const omniFuel = omniTime * factors.omniFuelRate;
+        const omniTime = (pista.omni_antiga / factors.omniClimbRate) * 60;
+        const omniDist = (omniTime / 3600 * factors.omniSpeed) * 1.852 * 1000;
+        const omniFuel = omniTime * factors.omniFuelRate;
 
-      switch (activeMetric) {
-        case 'distance': beforeVal = taxiDist + depDist + omniDist; break;
-        case 'time':     beforeVal = taxiTime + depTime + omniTime; break;
-        case 'fuel':     beforeVal = taxiFuel + depFuel + omniFuel; break;
-        case 'co2':      beforeVal = (taxiFuel + depFuel + omniFuel) * factors.co2Factor; break;
+        switch (activeMetric) {
+          case 'distance': beforeVal = taxiDist + depDist + omniDist; break;
+          case 'time':     beforeVal = taxiTime + depTime + omniTime; break;
+          case 'fuel':     beforeVal = taxiFuel + depFuel + omniFuel; break;
+          case 'co2':      beforeVal = (taxiFuel + depFuel + omniFuel) * factors.co2Factor; break;
+        }
+      } else {
+        const arrTime = pista.rot_arr_cabeceira;
+        const arrDist = pista.dist_arr_cabeceira;
+        const arrFuel = arrTime * factors.arrFuelRate;
+
+        const taxiTime = pista.taxi_arr_cabeceira / factors.taxiSpeed;
+        const taxiDist = pista.taxi_arr_cabeceira;
+        const taxiFuel = taxiTime * factors.taxiFuelRate;
+
+        switch (activeMetric) {
+          case 'distance': beforeVal = taxiDist + arrDist; break;
+          case 'time':     beforeVal = taxiTime + arrTime; break;
+          case 'fuel':     beforeVal = taxiFuel + arrFuel; break;
+          case 'co2':      beforeVal = (taxiFuel + arrFuel) * factors.co2Factor; break;
+        }
       }
-    } else {
-      // ARR Phases: Decolagem (Pouso) + Taxi ARR
-      const arrTime = pista.rot_arr_cabeceira;
-      const arrDist = pista.dist_arr_cabeceira;
-      const arrFuel = arrTime * factors.arrFuelRate;
 
-      const taxiTime = pista.taxi_arr_cabeceira / factors.taxiSpeed;
-      const taxiDist = pista.taxi_arr_cabeceira;
-      const taxiFuel = taxiTime * factors.taxiFuelRate;
+      const absoluteGain = gains.total[activeMetric];
+      const gainPercent = beforeVal > 0 ? (absoluteGain / beforeVal) * 100 : 0;
 
-      switch (activeMetric) {
-        case 'distance': beforeVal = taxiDist + arrDist; break;
-        case 'time':     beforeVal = taxiTime + arrTime; break;
-        case 'fuel':     beforeVal = taxiFuel + arrFuel; break;
-        case 'co2':      beforeVal = (taxiFuel + arrFuel) * factors.co2Factor; break;
-      }
-    }
+      return { pista, gains, gainPercent };
+    });
 
-    // 3. O ganho percentual é: (Ganho Absoluto / Valor Base) * 100
-    const absoluteGain = gains.total[activeMetric];
-    const gainPercent = beforeVal > 0 ? (absoluteGain / beforeVal) * 100 : 0;
-
-    return {
-      pista,
-      gains,
-      gainPercent
-    };
-  });
-
-  // Ordenação: Maior percentual no topo
-  const sortedResults = [...results].sort((a, b) => b.gainPercent - a.gainPercent);
+    return [...calculatedResults].sort((a, b) => b.gainPercent - a.gainPercent);
+  };
+  
+  const sortedResults = useMemo(getResultsAndSort, [allPistas, factors, activeEtapa, activeMetric]);
 
   const renderMedal = (rank: number) => {
     if (rank === 1) return <Medal size={20} className="text-yellow-500" />;

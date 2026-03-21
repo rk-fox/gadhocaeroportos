@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Clock, Fuel, Wind, Maximize, TrendingUp, Globe } from 'lucide-react';
 import { KpiCard, BarRow, MetricRow, Tooltip } from '../components/Shared';
 import { calculateGains, CalculationFactors } from '../utils/calculations';
 import { MetricType, EtapaType } from '../App';
 import { aerodromeService, Aerodromo, PistaConfiguracao } from '../utils/aerodromeService';
+import { getMapImageUrl } from '../utils/mapCache';
 
 interface DashboardViewProps {
   scale: number;
@@ -41,23 +42,29 @@ export default function DashboardView({
   }, []); // Empty dependency array to fetch all pistas once
 
   // Filter pistas by the active aerodrome ID
-  const aeroPistas = pistas.filter(p => p.aerodromo_id === activeAerodromeId);
+  const aeroPistas = useMemo(() => 
+    pistas.filter(p => p.aerodromo_id === activeAerodromeId),
+  [pistas, activeAerodromeId]);
   
   // Current pista being displayed in cards: hovered or destaque, filtered by active aerodrome
-  const activePista = hoveredPista || aeroPistas.find(p => p.destaque) || (aeroPistas.length > 0 ? aeroPistas[0] : null);
+  const activePista = useMemo(() => 
+    hoveredPista || aeroPistas.find(p => p.destaque) || (aeroPistas.length > 0 ? aeroPistas[0] : null),
+  [hoveredPista, aeroPistas]);
   
   // Calculate gains for the active pista only (for cards)
-  const activePistaGains = activePista ? calculateGains(activePista, factors, scale, activeEtapa) : null;
+  const activePistaGains = useMemo(() => 
+    activePista ? calculateGains(activePista, factors, scale, activeEtapa) : null,
+  [activePista, factors, scale, activeEtapa]);
 
   // Calculate total gains for all runways of the active aerodrome
-  const totalGainsRaw = aeroPistas.reduce((acc, p) => {
+  const totalGainsRaw = useMemo(() => aeroPistas.reduce((acc, p) => {
     const g = calculateGains(p, factors, scale, activeEtapa);
     acc.time += g.total.time;
     acc.fuel += g.total.fuel;
     acc.distance += g.total.distance;
     acc.co2 += g.total.co2;
     return acc;
-  }, { time: 0, fuel: 0, distance: 0, co2: 0 });
+  }, { time: 0, fuel: 0, distance: 0, co2: 0 }), [aeroPistas, factors, scale, activeEtapa]);
 
   const getMetricConfig = (type: MetricType, source: any) => {
     if (!source) return { label: '', unit: '', icon: null, value: 0 };
@@ -95,6 +102,7 @@ export default function DashboardView({
           
           return (
               <KpiCard 
+                key={m}
                 title={`Ganho em ${config.label}`} 
                 value={config.value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} 
                 unit={config.unit} 
@@ -185,7 +193,7 @@ export default function DashboardView({
            >
               {activeAerodrome?.latitude && activeAerodrome?.longitude && (
                 <img 
-                  src={`https://maps.googleapis.com/maps/api/staticmap?center=${activeAerodrome.latitude},${activeAerodrome.longitude}&zoom=${activeAerodrome.zoom || 15}&size=640x640&scale=2&maptype=satellite&key=${import.meta.env.VITE_GOOGLE_MAPS_KEY}`}
+                  src={getMapImageUrl(activeAerodrome)}
                   alt="Airport Satellite View"
                   className="w-full h-full object-cover shadow-2xl brightness-90 contrast-110"
                 />

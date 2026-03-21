@@ -147,7 +147,7 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
               />
               <ReferenceCard 
                 title="Consumo de Combustível"
-                refText="Eurocontrol BADA (Base of Aircraft Data)."
+                refText="ICAO Engine Emissions Databank, Eurocontrol BADA e FCOM (Flight Crew Operating Manual)"
                 detail={
                   <div className="mt-2 space-y-2 text-[10px] font-mono bg-slate-900 text-gain-light p-4 rounded-xl shadow-inner border border-white/5">
                     <p className="font-bold border-b border-white/10 pb-2 mb-2 text-white">Médias (A320/B737):</p>
@@ -272,10 +272,13 @@ function ReferenceCard({ title, refText, detail }: { title: string, refText: str
 }
 
 function InputGroup({ label, value, onChange, description }: { label: string, value: number, onChange: (v: string) => void, description?: string }) {
+  const safeId = label.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
   return (
     <div className="space-y-1">
-      <label className="block text-sm font-bold text-text-main">{label}</label>
+      <label htmlFor={safeId} className="block text-sm font-bold text-text-main">{label}</label>
       <input 
+        id={safeId}
+        name={safeId}
         type="number" 
         step="0.01"
         value={value}

@@ -36,27 +36,34 @@ export interface PistaConfiguracao {
   destaque: boolean;
 }
 
+let aerodromosCache: Aerodromo[] | null = null;
+let pistasCache: PistaConfiguracao[] | null = null;
+
 export const aerodromeService = {
-  async getAerodromos(): Promise<Aerodromo[]> {
+  async getAerodromos(forceRefresh = false): Promise<Aerodromo[]> {
+    if (aerodromosCache && !forceRefresh) return aerodromosCache;
+
     const { data, error } = await supabase
       .from('aerodromos')
       .select('*')
       .order('indicativo');
     
     if (error) throw error;
-    return data || [];
+    aerodromosCache = data || [];
+    return aerodromosCache;
   },
 
-  async getPistasConfiguracao(aerodromoId?: number): Promise<PistaConfiguracao[]> {
-    let query = supabase.from('pistas_configuracao').select('*');
-    
-    if (aerodromoId) {
-      query = query.eq('aerodromo_id', aerodromoId);
+  async getPistasConfiguracao(aerodromoId?: number, forceRefresh = false): Promise<PistaConfiguracao[]> {
+    if (!pistasCache || forceRefresh) {
+      const { data, error } = await supabase.from('pistas_configuracao').select('*');
+      if (error) throw error;
+      pistasCache = data || [];
     }
     
-    const { data, error } = await query;
-    if (error) throw error;
-    return data || [];
+    if (aerodromoId) {
+      return pistasCache.filter(p => p.aerodromo_id === aerodromoId);
+    }
+    return pistasCache;
   },
 
   async createPistaConfiguracao(pista: Omit<PistaConfiguracao, 'id' | 'created_at'>): Promise<PistaConfiguracao> {
@@ -66,6 +73,7 @@ export const aerodromeService = {
       .select()
       .single();
     if (error) throw error;
+    if (pistasCache) pistasCache.push(data); // Update cache
     return data;
   },
 
@@ -75,6 +83,7 @@ export const aerodromeService = {
       .delete()
       .eq('id', id);
     if (error) throw error;
+    if (pistasCache) pistasCache = pistasCache.filter(p => p.id !== id); // Update cache
   },
 
   async updatePistaConfiguracao(id: number, updates: Partial<PistaConfiguracao>): Promise<PistaConfiguracao> {
@@ -85,6 +94,10 @@ export const aerodromeService = {
       .select()
       .single();
     if (error) throw error;
+    if (pistasCache) {
+      const index = pistasCache.findIndex(p => p.id === id);
+      if (index !== -1) pistasCache[index] = data;
+    }
     return data;
   }
 };

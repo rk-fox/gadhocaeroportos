@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowRightLeft, Info, PlaneTakeoff, Fuel, Clock, Wind, Maximize } from 'lucide-react';
 import { calculateGains, CalculationFactors } from '../utils/calculations';
 import { MetricType, EtapaType } from '../App';
@@ -34,10 +34,12 @@ export default function ComparisonsView({ scale, factors, activeMetric, activeAe
 
   const selectedPista = pistas.find(p => p.id === selectedPistaId);
   
-  if (isLoading) return <div className="p-8 text-slate-400">Carregando dados...</div>;
-  if (!selectedPista) return <div className="p-8 text-slate-400">Nenhum dado disponível.</div>;
+  const gains = useMemo(() => 
+    selectedPista ? calculateGains(selectedPista, factors, scale, activeEtapa) : null,
+  [selectedPista, factors, scale, activeEtapa]);
 
-  const gains = calculateGains(selectedPista, factors, scale, activeEtapa);
+  if (isLoading) return <div className="p-8 text-slate-400">Carregando dados...</div>;
+  if (!selectedPista || !gains) return <div className="p-8 text-slate-400">Nenhum dado disponível.</div>;
 
   const getMetricConfig = (type: MetricType) => {
     switch (type) {
@@ -64,6 +66,8 @@ export default function ComparisonsView({ scale, factors, activeMetric, activeAe
 
         <div className="flex bg-surface-low p-1 rounded-xl border border-slate-200 shadow-inner">
           <select 
+            id="pista-selector"
+            name="pistaSelector"
             value={selectedPistaId || ''} 
             onChange={(e) => setSelectedPistaId(parseInt(e.target.value))}
             className="bg-transparent text-sm font-bold text-text-main px-4 py-2 outline-none cursor-pointer"

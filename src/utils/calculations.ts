@@ -15,11 +15,11 @@ export interface CalculationFactors {
 export const DEFAULT_FACTORS: CalculationFactors = {
   taxiSpeed: 7.7,
   taxiFuelRate: 0.33,
-  depFuelRate: 5.4,
-  arrFuelRate: 5.4,
+  depFuelRate: 2.5,
+  arrFuelRate: 0.8, //(0.15*0.16)+(0.35*1.2)+(0.5*0.14) = 0.514kg/s na conta ponderada
   omniFuelRate: 1.5,
-  omniClimbRate: 2500,
-  omniSpeed: 200,
+  omniClimbRate: 2750, //3000 B738 e 2500 A320
+  omniSpeed: 170, //165 B738 e 175 A320
   co2Factor: 3.15,
 };
 

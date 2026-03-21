@@ -29,6 +29,7 @@ import GlobalRankView from './views/GlobalRankView';
 import { AIRPORT_DATA } from './data/airportData';
 import { DEFAULT_FACTORS, CalculationFactors } from './utils/calculations';
 import { aerodromeService, Aerodromo } from './utils/aerodromeService';
+import { preloadMapImage } from './utils/mapCache';
 
 // Logos
 import logoGadhoc from './logo_gadhoc.png';
@@ -63,11 +64,19 @@ export default function App() {
       setAerodromos(withPistas);
       if (withPistas.length > 0) {
         setActiveAerodromeId(withPistas[0].id);
+        
+        // Pre-load static map images into browser memory to save API costs
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+        if (apiKey) {
+          withPistas.forEach(aero => preloadMapImage(aero, apiKey as string));
+        }
       }
     });
   }, []);
 
-  const activeAerodrome = aerodromos.find(a => a.id === activeAerodromeId);
+  const activeAerodrome = useMemo(() => 
+    aerodromos.find(a => a.id === activeAerodromeId), 
+  [aerodromos, activeAerodromeId]);
 
   const renderContent = () => {
     const commonProps = { 
