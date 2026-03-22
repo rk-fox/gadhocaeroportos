@@ -52,11 +52,12 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
       
       // 2. Calculamos o cenário base (Baseline) detalhado por fase para bater com a lógica do ganho
       let beforeVal = 0;
+      const taxiSpeedMs = factors.taxiSpeed * 0.514444;
       
       if (activeEtapa === 'DEP') {
-        const taxiTime = pista.taxi_dep_cabeceira / factors.taxiSpeed;
+        const taxiTime = pista.taxi_dep_cabeceira / taxiSpeedMs;
         const taxiDist = pista.taxi_dep_cabeceira;
-        const taxiFuel = taxiTime * factors.taxiFuelRate;
+        const taxiFuel = taxiTime * factors.taxiDepFuelRate;
 
         const depTime = pista.rot_dep_cabeceira;
         const depDist = pista.dist_dep_cabeceira;
@@ -75,11 +76,25 @@ export default function RankingView({ scale, factors, activeMetric, activeEtapa 
       } else {
         const arrTime = pista.rot_arr_cabeceira;
         const arrDist = pista.dist_arr_cabeceira;
-        const arrFuel = arrTime * factors.arrFuelRate;
 
-        const taxiTime = pista.taxi_arr_cabeceira / factors.taxiSpeed;
+        const calculateArrFuel = (timeOnRunway: number, runwayLength: number): number => {
+          if (runwayLength <= 0 || timeOnRunway <= 0) return 0;
+          const vrefMs = factors.arrVref * 0.514444; 
+          const intensity = (vrefMs * timeOnRunway) / runwayLength;
+          const diffIntensity = Math.max(0.001, factors.arrMaxIntensity - factors.arrMinIntensity);
+          const diffRev = factors.arrMaxRevPercent - factors.arrMinRevPercent;
+          let pRev = factors.arrMinRevPercent + (intensity - factors.arrMinIntensity) * (diffRev / diffIntensity);
+          pRev = Math.max(factors.arrMinRevPercent, Math.min(factors.arrMaxRevPercent, pRev));
+          const pIdle = 0.15; 
+          const pRoll = 1 - (pRev + pIdle);
+          return timeOnRunway * (pIdle * factors.arrIdleRate + pRev * factors.arrRevRate + pRoll * factors.arrRollRate);
+        };
+        
+        const arrFuel = calculateArrFuel(arrTime, arrDist);
+
+        const taxiTime = pista.taxi_arr_cabeceira / taxiSpeedMs;
         const taxiDist = pista.taxi_arr_cabeceira;
-        const taxiFuel = taxiTime * factors.taxiFuelRate;
+        const taxiFuel = taxiTime * factors.taxiArrFuelRate;
 
         switch (activeMetric) {
           case 'distance': beforeVal = taxiDist + arrDist; break;

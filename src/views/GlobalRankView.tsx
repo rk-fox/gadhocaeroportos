@@ -62,6 +62,8 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
     const calculateScenarioTotal = (pista: PistaConfiguracao, scenario: 'base' | 'optimized') => {
       const isBase = scenario === 'base';
       
+      const taxiSpeedMs = factors.taxiSpeed * 0.514444;
+
       if (activeEtapa === 'DEP') {
         const dist = isBase ? pista.dist_dep_cabeceira : pista.dist_dep_intersecao;
         const taxiDist = isBase ? pista.taxi_dep_cabeceira : pista.taxi_dep_intersecao;
@@ -72,8 +74,8 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
         const omniDist = (omniTime / 3600 * factors.omniSpeed) * 1.852 * 1000;
         const omniFuel = omniTime * factors.omniFuelRate;
 
-        const taxiTime = taxiDist / factors.taxiSpeed;
-        const taxiFuel = taxiTime * factors.taxiFuelRate;
+        const taxiTime = taxiDist / taxiSpeedMs;
+        const taxiFuel = taxiTime * factors.taxiDepFuelRate;
         const depFuel = rotTime * factors.depFuelRate;
 
         if (activeMetric === 'distance') return (dist + taxiDist + omniDist) * scale;
@@ -85,9 +87,23 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
         const taxiDist = isBase ? pista.taxi_arr_cabeceira : pista.taxi_arr_intersecao;
         const rotTime = isBase ? pista.rot_arr_cabeceira : pista.rot_arr_intersecao;
 
-        const taxiTime = taxiDist / factors.taxiSpeed;
-        const taxiFuel = taxiTime * factors.taxiFuelRate;
-        const arrFuel = rotTime * factors.arrFuelRate;
+        const taxiTime = taxiDist / taxiSpeedMs;
+        const taxiFuel = taxiTime * factors.taxiArrFuelRate;
+        
+        const calculateArrFuel = (timeOnRunway: number, runwayLength: number): number => {
+          if (runwayLength <= 0 || timeOnRunway <= 0) return 0;
+          const vrefMs = factors.arrVref * 0.514444; 
+          const intensity = (vrefMs * timeOnRunway) / runwayLength;
+          const diffIntensity = Math.max(0.001, factors.arrMaxIntensity - factors.arrMinIntensity);
+          const diffRev = factors.arrMaxRevPercent - factors.arrMinRevPercent;
+          let pRev = factors.arrMinRevPercent + (intensity - factors.arrMinIntensity) * (diffRev / diffIntensity);
+          pRev = Math.max(factors.arrMinRevPercent, Math.min(factors.arrMaxRevPercent, pRev));
+          const pIdle = 0.15; 
+          const pRoll = 1 - (pRev + pIdle);
+          return timeOnRunway * (pIdle * factors.arrIdleRate + pRev * factors.arrRevRate + pRoll * factors.arrRollRate);
+        };
+        
+        const arrFuel = calculateArrFuel(rotTime, dist);
 
         if (activeMetric === 'distance') return (dist + taxiDist) * scale;
         if (activeMetric === 'time') return (rotTime + taxiTime) * scale;

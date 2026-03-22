@@ -59,38 +59,73 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <h5 className="font-bold text-text-main mb-4 flex items-center gap-2">
                    <div className="bg-sidebar p-1.5 rounded-lg text-white"><MoveRight size={14} /></div>
-                   Cenário de Decolagem (DEP)
+                   Cálculos de Distâncias
                 </h5>
                 <div className="space-y-4 text-sm text-text-muted">
                   <div className="p-4 bg-white rounded-xl border border-slate-100 italic space-y-2 shadow-sm">
-                    <p className="font-bold text-text-main text-xs uppercase tracking-wider">Ganho de Distância:</p>
+                    <p className="font-bold text-text-main text-xs uppercase tracking-wider">Ganho na Decolagem:</p>
                     <p className="text-slate-600">(Dist. Cab. + Taxi Cab. + Omni Antiga) - (Dist. Int. + Taxi Int. + Omni Otimiz.)</p>
                   </div>
-                  <ul className="list-disc pl-5 space-y-3 text-xs">
-                    <li><strong>Tempo de Dep/ARR:</strong> Coletas realizadas pelo grupo.</li>
-                    <li><strong>Tempo de Taxi:</strong> Distância de Taxi / Velocidade Média de Taxi (15kt).</li>
-                    <li><strong>Consumo Total:</strong> Somatório dos tempos (Taxi, DEP e OMNI) x Taxas de Fluxo (BADA).</li>
-                  </ul>
+                  <div className="p-4 bg-white rounded-xl border border-slate-100 italic space-y-2 shadow-sm">
+                    <p className="font-bold text-text-main text-xs uppercase tracking-wider">Ganho no Pouso:</p>
+                    <p className="text-slate-600">(Dist. Cab. + Taxi Cab.) - (Dist. Int. + Taxi Int.)</p>
+                  </div>
+                </div>
+                <br></br>
+                <h5 className="font-bold text-text-main mb-4 flex items-center gap-2">
+                   <div className="bg-sidebar p-1.5 rounded-lg text-white"><MoveRight size={14} /></div>
+                   Detalhes
+                </h5>
+                <div className="space-y-4 text-sm text-text-muted">
+                  <div className="p-4 bg-white rounded-xl border border-slate-100 italic space-y-2 shadow-sm">
+                    <p className="font-bold text-text-main text-xs uppercase tracking-wider">Tempo de Dep/ARR:</p>
+                    <p className="text-slate-600">Coletas realizadas pelo grupo na fase 1A ou pela equipe do CGNA em visitas operacionais.</p>
+                  </div>
+                  <div className="p-4 bg-white rounded-xl border border-slate-100 italic space-y-2 shadow-sm">
+                    <p className="font-bold text-text-main text-xs uppercase tracking-wider">Tempo de Taxi:</p>
+                    <p className="text-slate-600">Distância de Taxi / Velocidade Média de Taxi (15kt ou 7,7m/s).</p>
+                  </div>
+                  <div className="p-4 bg-white rounded-xl border border-slate-100 italic space-y-2 shadow-sm">
+                    <p className="font-bold text-text-main text-xs uppercase tracking-wider">Redução de ROT:</p>
+                    <p className="text-slate-600">Ganho direto no tempo de ocupação de pista.</p>
+                  </div>
                 </div>
               </div>
 
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <h5 className="font-bold text-text-main mb-4 flex items-center gap-2">
                    <div className="bg-gain p-1.5 rounded-lg text-white"><MoveRight size={14} className="rotate-90" /></div>
-                   Cenário de Chegada (ARR)
+                   Cálculo de Consumo no Pouso
                 </h5>
                 <div className="space-y-4 text-sm text-text-muted">
-                  <div className="p-4 bg-white rounded-xl border border-slate-100 italic space-y-2 shadow-sm">
-                    <p className="font-bold text-text-main text-xs uppercase tracking-wider">Ganho de Distância:</p>
-                    <p className="text-slate-600">(Dist. Pouso Full + Taxi Cab.) - (Dist. Pouso Otimiz. + Taxi Int.)</p>
+                  <div className="p-4 bg-white rounded-xl border border-slate-100 italic shadow-sm">
+                    <p className="font-bold text-text-main text-xs uppercase tracking-wider mb-3">Equação Principal de Consumo (Pouso):</p>
+                    <div className="bg-slate-800 p-3 rounded-lg flex justify-center mb-4 text-center overflow-x-auto">
+                      <p className="text-white text-[11px] font-mono flex items-center h-full">
+                        C_pouso = T × [(P_idle × FF_idle) + (P_rev × FF_rev) + (P_roll × FF_roll)]
+                      </p>
+                    </div>
+                    <ul className="text-slate-600 text-[11px] space-y-2 ml-4 list-disc mb-4">
+                      <li><strong>T:</strong> Tempo total desde o cruzamento da cabeceira até livrar a pista (em segundos).</li>
+                      <li><strong>P_fase:</strong> Percentual do tempo em cada fase.</li>
+                      <li><strong>FF_fase:</strong> Fluxo de combustível em kg/s para a respectiva fase.</li>
+                    </ul>
+
+                    <p className="text-slate-700 text-[11px] font-bold border-t border-slate-200 pt-3 mb-2">
+                      Como os percentuais (P) são definidos dinamicamente?
+                    </p>
+                    <p className="text-slate-600 text-[11px] font-mono mb-2 bg-slate-100 p-2 rounded">
+                      Intensidade = (Vref[m/s] × TempoPista) ÷ Dist. Requerida
+                    </p>
+                    <p className="text-slate-600 text-[11px] leading-relaxed">
+                      A intensidade mapeia de forma contínua o percentual do uso de reverso (<span className="font-mono font-bold text-slate-700">P_rev</span>) entre <strong>{Math.round(factors.arrMinRevPercent * 100)}%</strong> (pistas longas, ex: BSB) e <strong>{Math.round(factors.arrMaxRevPercent * 100)}%</strong> (pistas curtas, ex: SDU). <br/><br/>
+                      O <span className="font-mono font-bold text-slate-700">P_idle</span> (Voo/Toque) é fixo em 15%, e o <span className="font-mono font-bold text-slate-700">P_roll</span> (Roll-out) obtêm a diferença restante da pista: <span className="font-mono bg-slate-100 px-1 hover:bg-slate-200 rounded">100% - (P_idle + P_rev)</span>. Toda a conversão matemática do aplicativo se baseia nesses estágios interdependentes.
+                    </p>
                   </div>
-                  <ul className="list-disc pl-5 space-y-3 text-xs">
-                    <li><strong>Redução de ROT:</strong> Ganho direto no tempo de ocupação de pista.</li>
-                    <li><strong>CO2:</strong> Combustível Total x 3,15 (Fator Estequiométrico ICAO).</li>
-                  </ul>
                 </div>
               </div>
             </div>
+
 
             {/* Inclusão das Fórmulas Matemáticas de Conversão OMNI Corrigidas */}
 <div className="mt-8 bg-slate-900 p-8 rounded-2xl text-slate-300 shadow-xl border border-slate-800">
@@ -143,17 +178,20 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
               <ReferenceCard 
                 title="Emissões de CO2 (3,15)"
                 refText="ICAO Document 9988 - Guidance on the Inventory and Reporting of Aircraft Emissions."
-                detail="Padrão global que estabelece a relação de massa entre queima de QAV e emissão de carbono."
+                detail="O cálculo das emissões de dióxido de carbono CO2 é realizado através da aplicação do Fator de Emissão Estequiométrico de 3,15kg de CO2/kg de combustível. Esta metodologia está em conformidade com o ICAO Doc 9988 (Guidance on the Use of Emissions Inventories and Models) e as diretrizes do IPCC para Inventários Nacionais de Gases de Efeito Estufa."
               />
               <ReferenceCard 
-                title="Consumo de Combustível"
-                refText="ICAO Engine Emissions Databank, Eurocontrol BADA e FCOM (Flight Crew Operating Manual)"
+                title="Consumo de Combustível e Desaceleração"
+                refText="Standard Operating Performance Coefficients (SOPC) baseados em manuais FCOM (Airbus/Boeing) e dados de telemetria operacional média."
                 detail={
                   <div className="mt-2 space-y-2 text-[10px] font-mono bg-slate-900 text-gain-light p-4 rounded-xl shadow-inner border border-white/5">
-                    <p className="font-bold border-b border-white/10 pb-2 mb-2 text-white">Médias (A320/B737):</p>
-                    <p className="flex justify-between"><span>Taxi (Idle):</span> <span>~12,5 kg/min/motor</span></p>
-                    <p className="flex justify-between"><span>Takeoff (TOGA):</span> <span>~160-200 kg/min/motor</span></p>
-                    <p className="flex justify-between"><span>Climb:</span> <span>~45 kg/min/motor</span></p>
+                    <p className="font-bold border-b border-white/10 pb-2 mb-2 text-white">Taxas de Pouso (A320/B738 Pesado):</p>
+                    <p className="flex justify-between"><span>Idle:</span> <span>~0.16 kg/s ({factors.arrIdleRate})</span></p>
+                    <p className="flex justify-between text-yellow-500"><span>Reverso:</span> <span>~1.20 kg/s ({factors.arrRevRate})</span></p>
+                    <p className="flex justify-between"><span>Roll-out:</span> <span>~0.14 kg/s ({factors.arrRollRate})</span></p>
+                    <p className="font-bold border-y border-white/10 py-2 my-2 text-white">Gerais (Taxas médias motor/min):</p>
+                    <p className="flex justify-between"><span>Taxi (Idle):</span> <span>~0.25 kg/min</span></p>
+                    <p className="flex justify-between"><span>Takeoff (TOGA):</span> <span>~2.5 kg/s</span></p>
                   </div>
                 }
               />
@@ -164,8 +202,8 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
               />
               <ReferenceCard 
                 title="Velocidades e Performance"
-                refText="FAA AC 120-74B e Manuais Performance (FCOM)."
-                detail="Referência para velocidades de taxi e razões de subida em empuxo de decolagem."
+                refText="FAA AC 120-74B e EUROCONTROL - Aircraft Performance Database. [ATC-PFDB]"
+                detail="Referência para velocidade de taxi, velocidades de voo e razões de subida."
               />
             </div>
           </section>
@@ -179,18 +217,24 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
             <h3 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
                 Taxiamento
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <InputGroup 
-                label="Velocidade Média TAXI (m/s)" 
+                label="Velocidade Média TAXI (kt)" 
                 value={factors.taxiSpeed} 
                 onChange={(v) => handleChange('taxiSpeed', v)} 
-                description="Velocidade padrão de taxiamento em solo."
+                description="Velocidade padrão de taxiamento em knots."
               />
               <InputGroup 
-                label="Consumo Médio TAXI (kg/s)" 
-                value={factors.taxiFuelRate} 
-                onChange={(v) => handleChange('taxiFuelRate', v)} 
-                description="Consumo de combustível durante o taxiamento."
+                label="Consumo TAXI DEP (kg/s)" 
+                value={factors.taxiDepFuelRate} 
+                onChange={(v) => handleChange('taxiDepFuelRate', v)} 
+                description="Consumo no taxi de partida."
+              />
+              <InputGroup 
+                label="Consumo TAXI ARR (kg/s)" 
+                value={factors.taxiArrFuelRate} 
+                onChange={(v) => handleChange('taxiArrFuelRate', v)} 
+                description="Consumo no taxi de chegada."
               />
             </div>
           </div>
@@ -200,22 +244,76 @@ export default function SettingsView({ factors, onUpdateFactors }: SettingsViewP
           {/* Flight Parameters */}
           <div>
             <h3 className="text-lg font-bold text-text-main mb-4">Decolagem / Pouso / OMNI</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <InputGroup 
                 label="Consumo DEP (kg/s)" 
                 value={factors.depFuelRate} 
                 onChange={(v) => handleChange('depFuelRate', v)} 
               />
               <InputGroup 
-                label="Consumo ARR (kg/s)" 
-                value={factors.arrFuelRate} 
-                onChange={(v) => handleChange('arrFuelRate', v)} 
-              />
-              <InputGroup 
                 label="Consumo OMNI (kg/s)" 
                 value={factors.omniFuelRate} 
                 onChange={(v) => handleChange('omniFuelRate', v)} 
               />
+            </div>
+
+            <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 mb-6">
+              <h4 className="font-bold text-text-main mb-4 flex items-center gap-2">Parâmetros Dinâmicos de Pouso (ARR)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <InputGroup 
+                  label="Consumo Idle (kg/s)" 
+                  value={factors.arrIdleRate} 
+                  onChange={(v) => handleChange('arrIdleRate', v)} 
+                  description="Fase de Toque/Flare."
+                />
+                <InputGroup 
+                  label="Consumo Reverso (kg/s)" 
+                  value={factors.arrRevRate} 
+                  onChange={(v) => handleChange('arrRevRate', v)} 
+                  description="Fase de desaceleração agressiva."
+                />
+                <InputGroup 
+                  label="Consumo Rollout (kg/s)" 
+                  value={factors.arrRollRate} 
+                  onChange={(v) => handleChange('arrRollRate', v)} 
+                  description="Fase final correndo na pista."
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 border-t border-slate-200/60 pt-4">
+                <InputGroup 
+                  label="Intensidade Mín." 
+                  value={factors.arrMinIntensity} 
+                  onChange={(v) => handleChange('arrMinIntensity', v)} 
+                  description="Longas (ex: 0.6)"
+                />
+                <InputGroup 
+                  label="Intensidade Máx." 
+                  value={factors.arrMaxIntensity} 
+                  onChange={(v) => handleChange('arrMaxIntensity', v)} 
+                  description="Curtas (ex: 1.6)"
+                />
+                <InputGroup 
+                  label="% Rev Mínimo" 
+                  value={factors.arrMinRevPercent} 
+                  onChange={(v) => handleChange('arrMinRevPercent', v)} 
+                  description="Ref: 0.15 (15%)"
+                />
+                <InputGroup 
+                  label="% Rev Máximo" 
+                  value={factors.arrMaxRevPercent} 
+                  onChange={(v) => handleChange('arrMaxRevPercent', v)} 
+                  description="Ref: 0.65 (65%)"
+                />
+                <InputGroup 
+                  label="Vref Média (kt)" 
+                  value={factors.arrVref} 
+                  onChange={(v) => handleChange('arrVref', v)} 
+                  description="Ref: 140 nós"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
               <InputGroup 
                 label="Fator CO2 (kg CO2 / kg combustível)" 
                 value={factors.co2Factor} 
