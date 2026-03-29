@@ -22,21 +22,21 @@ export interface CalculationFactors {
 
 export const DEFAULT_FACTORS: CalculationFactors = {
   taxiSpeed: 15, // kt
-  taxiDepFuelRate: 0.33,
-  taxiArrFuelRate: 0.25,
-  depFuelRate: 2.5,
-  arrIdleRate: 0.16,
-  arrRevRate: 1.20,
-  arrRollRate: 0.14,
+  taxiDepFuelRate: 0.33, //kg/s
+  taxiArrFuelRate: 0.25, //kg/s
+  depFuelRate: 2.5, //kg/s
+  arrIdleRate: 0.16, //kg/s
+  arrRevRate: 1.20, //kg/s
+  arrRollRate: 0.14, //kg/s
   arrVref: 140, //137 pro A320 e 147 pro B738
-  arrMinIntensity: 0.6,
-  arrMaxIntensity: 1.6,
-  arrMinRevPercent: 0.15,
-  arrMaxRevPercent: 0.80,
-  omniFuelRate: 1.5,
-  omniClimbRate: 2750, //3000 B738 e 2500 A320
-  omniSpeed: 170, //165 B738 e 175 A320
-  co2Factor: 3.15,
+  arrMinIntensity: 0.6, //min intensity
+  arrMaxIntensity: 1.6, //max intensity
+  arrMinRevPercent: 0.15, //min reverse percentage (0.15)
+  arrMaxRevPercent: 0.80, //max reverse percentage (0.80)
+  omniFuelRate: 1.5, //kg/s
+  omniClimbRate: 2500, //3000 B738 e 2500 A320
+  omniSpeed: 165, //165 B738 e 175 A320
+  co2Factor: 3.15, //kg CO2 / kg Combustível
 };
 
 export interface GainResult {
