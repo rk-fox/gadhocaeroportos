@@ -802,8 +802,14 @@ export default function MonitoringView() {
 
       {/* ===== MODAL: Detalhes da Ação ===== */}
       {showDetailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onMouseDown={() => setShowDetailModal(null)}
+        >
+          <div 
+            className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Info size={16} className="text-sky-400" />
@@ -927,8 +933,14 @@ export default function MonitoringView() {
 
       {/* ===== MODAL: Histórico ===== */}
       {showHistoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onMouseDown={() => { setShowHistoryModal(null); setHistoryData([]); setEditingUpdate(null); }}
+        >
+          <div 
+            className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <History size={16} className="text-sky-400" />
