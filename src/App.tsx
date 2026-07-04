@@ -25,6 +25,7 @@ import DataView from './views/DataView';
 import SettingsView from './views/SettingsView';
 import AboutView from './views/AboutView';
 import GlobalRankView from './views/GlobalRankView';
+import MonitoringView from './views/MonitoringView';
 
 import { AIRPORT_DATA } from './data/airportData';
 import { DEFAULT_FACTORS, CalculationFactors } from './utils/calculations';
@@ -105,6 +106,8 @@ export default function App() {
         return <GlobalRankView {...commonProps} />;
       case 'Sobre':
         return <AboutView />;
+      case 'Monitoramento':
+        return <MonitoringView />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-slate-400">
@@ -153,6 +156,7 @@ export default function App() {
           <NavItem icon={<Activity size={18} />} label="Simulador" active={activeTab === 'Simulador'} onClick={() => setActiveTab('Simulador')} />
           <NavItem icon={<Trophy size={18} />} label="Ranking" active={activeTab === 'Ranking'} onClick={() => setActiveTab('Ranking')} />
           <NavItem icon={<Database size={18} />} label="Dados" active={activeTab === 'Dados'} onClick={() => setActiveTab('Dados')} />
+          <NavItem icon={<Activity size={18} />} label="Monitoramento" active={activeTab === 'Monitoramento'} onClick={() => setActiveTab('Monitoramento')} />
           <div className="my-4 border-t border-white/5 mx-6"></div>
           <NavItem icon={<Settings size={18} />} label="Configurações" active={activeTab === 'Configurações'} onClick={() => setActiveTab('Configurações')} />
           <NavItem icon={<BookOpen size={18} />} label="Sobre" active={activeTab === 'Sobre'} onClick={() => setActiveTab('Sobre')} />
