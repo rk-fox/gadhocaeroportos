@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { Plus, Edit2, History, RotateCcw, X, Info, Check, Eye, Trash2, KeyRound } from 'lucide-react';
+import { Plus, Edit2, History, RotateCcw, X, Info, Check, Eye, Trash2, KeyRound, ChevronUp, ChevronDown } from 'lucide-react';
 
 export interface Action {
   id: number;
@@ -190,6 +190,10 @@ export default function MonitoringView() {
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Sorting
+  const [sortField, setSortField] = useState<keyof Action>('conclusao');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
   // Filters
   const [selectedAero, setSelectedAero] = useState('Todos');
   const [selectedReuniao, setSelectedReuniao] = useState('Todos');
@@ -249,12 +253,37 @@ export default function MonitoringView() {
   const statusOptions = [...new Set(actions.map(a => a.status).filter(Boolean))].sort();
 
   // Filtered actions
-  const filtered = actions.filter(a => {
+  let filtered = actions.filter(a => {
     if (selectedAero !== 'Todos' && a.aerodromo !== selectedAero) return false;
     if (selectedReuniao !== 'Todos' && a.reuniao !== selectedReuniao) return false;
     if (selectedStatus !== 'Todos' && a.status !== selectedStatus) return false;
     return true;
   });
+
+  filtered = filtered.sort((a, b) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+    if (aVal === null) aVal = '';
+    if (bVal === null) bVal = '';
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (field: keyof Action) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: keyof Action }) => {
+    if (sortField !== field) return <div className="w-3.5" />;
+    return sortDirection === 'asc' ? <ChevronUp size={14} className="text-sky-400" /> : <ChevronDown size={14} className="text-sky-400" />;
+  };
 
   // Chart data
   const statusSegments = [
@@ -584,13 +613,25 @@ export default function MonitoringView() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-800 whitespace-nowrap">
-                  <th className="px-6 py-4">Aeródromo</th>
-                  <th className="px-6 py-4">Conclusão</th>
-                  <th className="px-6 py-4">Ação</th>
-                  <th className="px-6 py-4 text-center">Status</th>
-                  <th className="px-6 py-4 text-center">Prazo</th>
-                  <th className="px-6 py-4 text-center">Últ. Atualização</th>
+                <tr className="bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-800 whitespace-nowrap select-none">
+                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('aerodromo')}>
+                    <div className="flex items-center gap-1.5">Aeródromo <SortIcon field="aerodromo" /></div>
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('conclusao')}>
+                    <div className="flex items-center gap-1.5">Conclusão <SortIcon field="conclusao" /></div>
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('acao')}>
+                    <div className="flex items-center gap-1.5">Ação <SortIcon field="acao" /></div>
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors text-center" onClick={() => handleSort('status')}>
+                    <div className="flex items-center justify-center gap-1.5">Status <SortIcon field="status" /></div>
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors text-center" onClick={() => handleSort('prazo')}>
+                    <div className="flex items-center justify-center gap-1.5">Prazo <SortIcon field="prazo" /></div>
+                  </th>
+                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors text-center" onClick={() => handleSort('ult_att')}>
+                    <div className="flex items-center justify-center gap-1.5">Últ. Atualização <SortIcon field="ult_att" /></div>
+                  </th>
                   <th className="px-6 py-4 text-center">Ações</th>
                 </tr>
               </thead>
