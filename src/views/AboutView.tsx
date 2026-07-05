@@ -5,7 +5,7 @@ export default function AboutView() {
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-20">
       <section className="space-y-8 max-w-4xl mx-auto px-4">
-  <h2 className="text-4xl font-display font-extrabold text-text-main tracking-tight text-center">
+  <h2 className="text-4xl font-display font-extrabold text-text-main tracking-tight">
     Sobre o Projeto
   </h2>
 

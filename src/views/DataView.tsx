@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Download, Filter, Search, Info, Plus, Trash2, Edit2, Check, X, Plane, MapPin, Navigation, ArrowRight, Save } from 'lucide-react';
+import { Database, Download, Filter, Search, Info, Plus, Trash2, Edit2, Check, X, Plane, MapPin, Navigation, ArrowRight, Save, KeyRound } from 'lucide-react';
 import { calculateGains, CalculationFactors } from '../utils/calculations';
 import { aerodromeService, Aerodromo, PistaConfiguracao } from '../utils/aerodromeService';
 import { MetricType, EtapaType } from '../App';
@@ -28,6 +28,29 @@ export default function DataView({
   const [aerodromos, setAerodromos] = useState<Aerodromo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [passwordModal, setPasswordModal] = useState<{
+    open: boolean;
+    error: string;
+    onSuccess: () => void;
+  }>({ open: false, error: '', onSuccess: () => {} });
+  const [passwordInput, setPasswordInput] = useState('');
+
+  const requestPassword = (actionCallback: () => void) => {
+    setPasswordInput('');
+    setPasswordModal({ open: true, error: '', onSuccess: actionCallback });
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === 'Cgn@1234') {
+      const callback = passwordModal.onSuccess;
+      setPasswordModal({ open: false, error: '', onSuccess: () => {} });
+      callback();
+    } else {
+      setPasswordModal(prev => ({ ...prev, error: 'Senha incorreta. Tente novamente.' }));
+    }
+  };
+
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newPista, setNewPista] = useState<Partial<PistaConfiguracao>>({
     aerodromo_id: activeAerodromeId,
@@ -92,6 +115,8 @@ export default function DataView({
   };
 
   const handleEdit = (item: PistaConfiguracao) => {
+    requestPassword(() => {
+
     setNewPista({
       aerodromo_id: item.aerodromo_id,
       pista_identificador: item.pista_identificador,
@@ -117,6 +142,7 @@ export default function DataView({
     setIsAdding(true);
     // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   };
 
   const resetForm = () => {
@@ -144,6 +170,7 @@ export default function DataView({
   };
 
   const handleDelete = async (id: number) => {
+    requestPassword(async () => {
     if (confirm('Tem certeza que deseja excluir esta pista?')) {
       try {
         await aerodromeService.deletePistaConfiguracao(id);
@@ -153,6 +180,7 @@ export default function DataView({
         alert('Erro ao excluir pista.');
       }
     }
+    });
   };
 
   const filteredData = pistas.filter(item => 
@@ -364,6 +392,57 @@ export default function DataView({
           </div>
         </div>
       </section>
+
+      {/* ===== MODAL: Inserir Senha ===== */}
+      {passwordModal.open && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-slate-800 flex flex-col items-center bg-slate-950 text-center">
+              <div className="p-3 bg-sky-500/10 text-sky-400 rounded-full mb-3">
+                <KeyRound size={28} />
+              </div>
+              <h3 className="text-base font-bold text-white">Autorização Requerida</h3>
+              <p className="text-xs text-slate-400 mt-1">Insira a senha de acesso para realizar esta operação</p>
+            </div>
+            <form onSubmit={handlePasswordSubmit}>
+              <div className="p-6 space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <input
+                    autoFocus
+                    type="password"
+                    required
+                    value={passwordInput}
+                    onChange={e => setPasswordInput(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-center text-white p-3 focus:outline-none focus:border-slate-700 placeholder-slate-600"
+                    placeholder="••••••••"
+                  />
+                  {passwordModal.error && (
+                    <span className="text-xs text-red-500 font-bold text-center mt-1">
+                      {passwordModal.error}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="p-4 border-t border-slate-800 bg-slate-950 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPasswordModal(prev => ({ ...prev, open: false }))}
+                  className="px-4 py-2 border border-slate-800 hover:bg-slate-850 rounded-lg text-xs font-bold text-slate-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-sky-500 hover:bg-sky-600 rounded-lg text-xs font-bold text-white"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

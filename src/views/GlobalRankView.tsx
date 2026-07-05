@@ -173,11 +173,11 @@ export default function GlobalRankView({ scale, factors, activeMetric, activeEta
 
   return (
     <div className="max-w-7xl mx-auto">
-      <section className="mb-10 text-center">
+      <section className="mb-10">
         <h2 className="text-3xl font-display font-extrabold text-text-main tracking-tight mb-2">
           Comparação Global de Eficiência
         </h2>
-        <p className="text-text-muted max-w-2xl mx-auto">
+        <p className="text-text-muted">
           Visão consolidada do ganho operacional por aeródromo (Pistas Preferencial), comparando o cenário base com o otimizado na etapa de {activeEtapa}.
         </p>
       </section>

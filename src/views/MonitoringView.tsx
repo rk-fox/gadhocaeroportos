@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { Plus, Edit2, Edit, History, RotateCcw, X, Info, Check, Eye, Trash2, KeyRound, ChevronUp, ChevronDown, FileUp, FileEdit } from 'lucide-react';
+import { Plus, Edit2, Edit, History, RotateCcw, X, Info, Check, Eye, Trash2, KeyRound, ChevronUp, ChevronDown, FileUp, FileEdit, Moon, Sun } from 'lucide-react';
 
 export interface Action {
   id: number;
@@ -25,14 +25,14 @@ export interface ActionUpdate {
   dt_att: string;
 }
 
-// --- Donut Chart Component ---
 interface DonutChartProps {
   segments: { label: string; value: number; color: string }[];
   title: string;
   size?: number;
+  darkMode?: boolean;
 }
 
-const DonutChart: React.FC<DonutChartProps> = ({ segments, title, size = 180 }) => {
+const DonutChart: React.FC<DonutChartProps> = ({ segments, title, size = 180, darkMode = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const total = segments.reduce((s, seg) => s + seg.value, 0);
@@ -66,7 +66,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ segments, title, size = 180 }) 
         ctx.beginPath();
         ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
         ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
-        ctx.fillStyle = '#1e293b';
+        ctx.fillStyle = darkMode ? '#1e293b' : '#e2e8f0';
         ctx.fill();
 
         ctx.font = `bold ${size * 0.12}px sans-serif`;
@@ -94,7 +94,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ segments, title, size = 180 }) 
       ctx.font = `bold ${size * 0.18}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#f8fafc';
+      ctx.fillStyle = darkMode ? '#f8fafc' : '#0f172a';
       ctx.fillText(String(total), cx, cy - size * 0.03);
 
       ctx.font = `500 ${size * 0.07}px sans-serif`;
@@ -108,18 +108,18 @@ const DonutChart: React.FC<DonutChartProps> = ({ segments, title, size = 180 }) 
 
     animRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(animRef.current);
-  }, [segments, total, size]);
+  }, [segments, total, size, darkMode]);
 
   return (
     <div className="flex flex-col items-center">
-      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{title}</h3>
+      <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{title}</h3>
       <canvas ref={canvasRef} style={{ width: size, height: size }} />
       <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4 max-w-[240px]">
         {segments.map(seg => (
           <div key={seg.label} className="flex items-center gap-1.5">
             <span className="inline-block size-2 rounded-full" style={{ backgroundColor: seg.color }} />
-            <span className="text-[11px] text-slate-400 font-medium">
-              {seg.label}: <span className="font-bold text-slate-200">{seg.value}</span>
+            <span className={`text-[11px] font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              {seg.label}: <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>{seg.value}</span>
             </span>
           </div>
         ))}
@@ -177,11 +177,18 @@ const statusColor = (status: string): string => {
   }
 };
 
-const statusBg = (status: string): string => {
+const statusBg = (status: string, dark: boolean = false): string => {
+  if (dark) {
+    switch (status) {
+      case 'Concluída': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+      case 'Em Andamento': return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+      default: return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+    }
+  }
   switch (status) {
-    case 'Concluída': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-    case 'Em Andamento': return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
-    default: return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+    case 'Concluída': return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+    case 'Em Andamento': return 'bg-amber-50 text-amber-700 border border-amber-200';
+    default: return 'bg-slate-100 text-slate-600 border border-slate-200';
   }
 };
 
@@ -189,6 +196,7 @@ const statusBg = (status: string): string => {
 export default function MonitoringView() {
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Sorting
   const [sortField, setSortField] = useState<keyof Action>('conclusao');
@@ -559,34 +567,47 @@ export default function MonitoringView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-display font-extrabold text-oklch tracking-tight">
+          <h2 className={`text-3xl font-display font-extrabold tracking-tight leading-none mb-1 ${darkMode ? 'text-oklch' : 'text-text-main'}`}>
             Painel Gerencial de Monitoramento
           </h2>
-          <p className="text-sm font-medium text-slate-400 mt-1">
+          <p className={`text-text-muted ${darkMode ? 'text-slate-400' : 'text-text-muted'}`}>
             Monitoramento das Ações e Prazos das Equipes
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-sky-500/20 active:scale-95 text-sm"
-        >
-          <Plus size={16} />
-          Cadastrar Ação
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 border ${
+              darkMode
+                ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm'
+            }`}
+          >
+            {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+            {darkMode ? 'Modo Claro' : 'Modo Noturno'}
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gain hover:bg-gain/90 text-white rounded-xl font-bold transition-all shadow-lg shadow-gain/20 active:scale-95 text-sm"
+          >
+            <Plus size={16} />
+            Cadastrar Ação
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+      <div className={`border rounded-2xl p-5 space-y-4 transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-surface-card border-slate-100 shadow-sm'}`}>
         {/* Aerodromo Selectors */}
         <div>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Comitê</span>
+          <span className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${darkMode ? 'text-slate-400' : 'text-text-muted'}`}>Comitê</span>
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => setSelectedAero('Todos')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 selectedAero === 'Todos'
-                  ? 'bg-white text-slate-950 shadow'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                  ? darkMode ? 'bg-white text-slate-950 shadow' : 'bg-sidebar text-white shadow'
+                  : darkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
               }`}
             >
               Todos
@@ -597,8 +618,8 @@ export default function MonitoringView() {
                 onClick={() => setSelectedAero(a)}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                   selectedAero === a
-                    ? 'bg-white text-slate-950 shadow'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                    ? darkMode ? 'bg-white text-slate-950 shadow' : 'bg-sidebar text-white shadow'
+                    : darkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
                 }`}
               >
                 {a}
@@ -608,13 +629,17 @@ export default function MonitoringView() {
         </div>
 
         {/* Dropdowns row */}
-        <div className="flex flex-wrap gap-4 pt-2 border-t border-slate-800">
+        <div className={`flex flex-wrap gap-4 pt-2 border-t ${darkMode ? 'border-slate-800' : 'border-slate-100'}`}>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reunião:</span>
+            <span className={`text-[10px] font-black uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-text-muted'}`}>Reunião:</span>
             <select
               value={selectedReuniao}
               onChange={e => setSelectedReuniao(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg text-xs font-bold text-slate-300 p-2 min-w-[160px] focus:outline-none focus:border-slate-700"
+              className={`border rounded-lg text-xs font-bold p-2 min-w-[160px] focus:outline-none ${
+                darkMode
+                  ? 'bg-slate-950 border-slate-800 text-slate-300 focus:border-slate-700'
+                  : 'bg-surface-bg border-slate-200 text-text-main focus:border-slate-400'
+              }`}
             >
               <option value="Todos">Todas</option>
               {reuniaoOptions.map(r => <option key={r} value={r}>{r}</option>)}
@@ -622,11 +647,15 @@ export default function MonitoringView() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status:</span>
+            <span className={`text-[10px] font-black uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-text-muted'}`}>Status:</span>
             <select
               value={selectedStatus}
               onChange={e => setSelectedStatus(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg text-xs font-bold text-slate-300 p-2 min-w-[160px] focus:outline-none focus:border-slate-700"
+              className={`border rounded-lg text-xs font-bold p-2 min-w-[160px] focus:outline-none ${
+                darkMode
+                  ? 'bg-slate-950 border-slate-800 text-slate-300 focus:border-slate-700'
+                  : 'bg-surface-bg border-slate-200 text-text-main focus:border-slate-400'
+              }`}
             >
               <option value="Todos">Todos</option>
               {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
@@ -637,75 +666,77 @@ export default function MonitoringView() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex justify-center items-center">
-          <DonutChart segments={statusSegments} title="Controle de Status" />
+        <div className={`border rounded-2xl p-6 flex justify-center items-center transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-surface-card border-slate-100 shadow-sm'}`}>
+          <DonutChart segments={statusSegments} title="Controle de Status" darkMode={darkMode} />
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex justify-center items-center">
-          <DonutChart segments={deadlineSegments} title="Controle de Prazos (Não concluídas)" />
+        <div className={`border rounded-2xl p-6 flex justify-center items-center transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-surface-card border-slate-100 shadow-sm'}`}>
+          <DonutChart segments={deadlineSegments} title="Controle de Prazos (Não concluídas)" darkMode={darkMode} />
         </div>
       </div>
 
       {/* Actions Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
-          <h3 className="font-display font-bold text-white text-base">Ações Cadastradas ({filtered.length})</h3>
+      <div className={`border rounded-2xl overflow-hidden transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-surface-card border-slate-100 shadow-sm'}`}>
+        <div className={`px-6 py-4 border-b flex justify-between items-center ${darkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+          <h3 className={`font-display font-bold text-base ${darkMode ? 'text-white' : 'text-text-main'}`}>Ações Cadastradas ({filtered.length})</h3>
         </div>
 
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gain" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-slate-500 text-sm">Nenhuma ação correspondente aos filtros.</p>
+            <p className={`text-sm ${darkMode ? 'text-slate-500' : 'text-text-muted'}`}>Nenhuma ação correspondente aos filtros.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-800 whitespace-nowrap select-none">
-                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('aerodromo')}>
+                <tr className={`text-xs font-bold uppercase tracking-wider border-b whitespace-nowrap select-none ${
+                  darkMode ? 'bg-slate-950 text-slate-400 border-slate-800' : 'bg-surface-low text-text-muted border-slate-100'
+                }`}>
+                  <th className={`px-6 py-4 cursor-pointer transition-colors ${darkMode ? 'hover:text-white' : 'hover:text-text-main'}`} onClick={() => handleSort('aerodromo')}>
                     <div className="flex items-center gap-1.5">Comitê <SortIcon field="aerodromo" /></div>
                   </th>
-                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('conclusao')}>
+                  <th className={`px-6 py-4 cursor-pointer transition-colors ${darkMode ? 'hover:text-white' : 'hover:text-text-main'}`} onClick={() => handleSort('conclusao')}>
                     <div className="flex items-center gap-1.5">Conclusão <SortIcon field="conclusao" /></div>
                   </th>
-                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('acao')}>
+                  <th className={`px-6 py-4 cursor-pointer transition-colors ${darkMode ? 'hover:text-white' : 'hover:text-text-main'}`} onClick={() => handleSort('acao')}>
                     <div className="flex items-center gap-1.5">Ação <SortIcon field="acao" /></div>
                   </th>
-                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors text-center" onClick={() => handleSort('status')}>
+                  <th className={`px-6 py-4 cursor-pointer transition-colors text-center ${darkMode ? 'hover:text-white' : 'hover:text-text-main'}`} onClick={() => handleSort('status')}>
                     <div className="flex items-center justify-center gap-1.5">Status <SortIcon field="status" /></div>
                   </th>
-                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors text-center" onClick={() => handleSort('prazo')}>
+                  <th className={`px-6 py-4 cursor-pointer transition-colors text-center ${darkMode ? 'hover:text-white' : 'hover:text-text-main'}`} onClick={() => handleSort('prazo')}>
                     <div className="flex items-center justify-center gap-1.5">Prazo <SortIcon field="prazo" /></div>
                   </th>
-                  <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors text-center" onClick={() => handleSort('ult_att')}>
+                  <th className={`px-6 py-4 cursor-pointer transition-colors text-center ${darkMode ? 'hover:text-white' : 'hover:text-text-main'}`} onClick={() => handleSort('ult_att')}>
                     <div className="flex items-center justify-center gap-1.5">Últ. Atualização <SortIcon field="ult_att" /></div>
                   </th>
                   <th className="px-6 py-4 text-center">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 text-slate-300">
+              <tbody className={`divide-y ${darkMode ? 'divide-slate-800 text-slate-300' : 'divide-slate-100 text-text-main'}`}>
                 {filtered.map(action => {
                   const days = calcDeadlineDays(action.prazo);
                   const dlColor = getDeadlineColor(days);
                   return (
                     <tr
                       key={action.id}
-                      className="hover:bg-slate-800/40 cursor-pointer transition-colors"
+                      className={`cursor-pointer transition-colors ${darkMode ? 'hover:bg-slate-800/40' : 'hover:bg-slate-50'}`}
                       onClick={() => setShowDetailModal(action)}
                     >
-                      <td className="px-6 py-4 font-bold text-white whitespace-nowrap">{action.aerodromo}</td>
-                      <td className="px-6 py-4 text-slate-400 max-w-[180px] truncate">{action.conclusao}</td>
-                      <td className="px-6 py-4 text-slate-200 max-w-[220px] truncate">{action.acao}</td>
+                      <td className={`px-6 py-4 font-bold whitespace-nowrap ${darkMode ? 'text-white' : 'text-text-main'}`}>{action.aerodromo}</td>
+                      <td className={`px-6 py-4 max-w-[180px] truncate ${darkMode ? 'text-slate-400' : 'text-text-muted'}`}>{action.conclusao}</td>
+                      <td className={`px-6 py-4 max-w-[220px] truncate ${darkMode ? 'text-slate-200' : 'text-text-main'}`}>{action.acao}</td>
                       <td className="px-6 py-4 text-center whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBg(action.status)}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBg(action.status, darkMode)}`}>
                           {action.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center whitespace-nowrap">
                         <div className="flex flex-col items-center">
-                          <span className="font-bold text-slate-200">{formatDate(action.prazo)}</span>
+                          <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-text-main'}`}>{formatDate(action.prazo)}</span>
                           {action.status !== 'Concluída' && action.prazo && (
                             <span className="text-[9px] font-black uppercase mt-0.5" style={{ color: dlColor }}>
                               {getDeadlineLabel(days)}
@@ -713,7 +744,7 @@ export default function MonitoringView() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center text-slate-400 whitespace-nowrap">
+                      <td className={`px-6 py-4 text-center whitespace-nowrap ${darkMode ? 'text-slate-400' : 'text-text-muted'}`}>
                         {formatDate(action.ult_att)}
                       </td>
                       <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
@@ -721,7 +752,7 @@ export default function MonitoringView() {
                           {action.status !== 'Concluída' && (
                             <button
                               onClick={() => openUpdate(action)}
-                              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-850 rounded-lg transition-all"
+                              className={`p-1.5 rounded-lg transition-all ${darkMode ? 'text-slate-400 hover:text-white hover:bg-slate-850' : 'text-slate-400 hover:text-gain hover:bg-slate-100'}`}
                               title="Atualizar"
                             >
                               <FileUp size={14} />
@@ -729,14 +760,14 @@ export default function MonitoringView() {
                           )}
                           <button
                             onClick={() => fetchHistory(action)}
-                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-850 rounded-lg transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${darkMode ? 'text-slate-400 hover:text-white hover:bg-slate-850' : 'text-slate-400 hover:text-gain hover:bg-slate-100'}`}
                             title="Ver Histórico"
                           >
                             <History size={14} />
                           </button>
                           <button
                             onClick={() => handleOpenEditAction(action)}
-                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-850 rounded-lg transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${darkMode ? 'text-slate-400 hover:text-white hover:bg-slate-850' : 'text-slate-400 hover:text-gain hover:bg-slate-100'}`}
                             title="Editar Ação"
                           >
                             <Edit size={14} />
@@ -744,7 +775,7 @@ export default function MonitoringView() {
                           {action.status === 'Concluída' && (
                             <button
                               onClick={() => handleRevert(action)}
-                              className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-850 rounded-lg transition-all"
+                              className={`p-1.5 rounded-lg transition-all ${darkMode ? 'text-slate-400 hover:text-amber-400 hover:bg-slate-850' : 'text-slate-400 hover:text-amber-600 hover:bg-slate-100'}`}
                               title="Reverter Status"
                             >
                               <RotateCcw size={14} />
@@ -752,7 +783,7 @@ export default function MonitoringView() {
                           )}
                           <button
                             onClick={() => handleDeleteAction(action)}
-                            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-850 rounded-lg transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${darkMode ? 'text-slate-400 hover:text-red-400 hover:bg-slate-850' : 'text-slate-400 hover:text-red-500 hover:bg-slate-100'}`}
                             title="Deletar Ação"
                           >
                             <Trash2 size={14} />
