@@ -579,7 +579,7 @@ export default function MonitoringView() {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
         {/* Aerodromo Selectors */}
         <div>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Aeródromo</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Comitê</span>
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => setSelectedAero('Todos')}
@@ -665,7 +665,7 @@ export default function MonitoringView() {
               <thead>
                 <tr className="bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-800 whitespace-nowrap select-none">
                   <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('aerodromo')}>
-                    <div className="flex items-center gap-1.5">Aeródromo <SortIcon field="aerodromo" /></div>
+                    <div className="flex items-center gap-1.5">Comitê <SortIcon field="aerodromo" /></div>
                   </th>
                   <th className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('conclusao')}>
                     <div className="flex items-center gap-1.5">Conclusão <SortIcon field="conclusao" /></div>
@@ -833,7 +833,7 @@ export default function MonitoringView() {
             <div className="p-6 overflow-y-auto space-y-4">
               <form id="createForm" onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aeródromo</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Comitê</label>
                   <input required value={createForm.aerodromo} onChange={e => setCreateForm({ ...createForm, aerodromo: e.target.value })}
                     className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700"
                     placeholder="Ex: 01_GADHOC AEROPORTOS" />
@@ -913,7 +913,7 @@ export default function MonitoringView() {
             <div className="p-6 overflow-y-auto space-y-4">
               <form id="editActionForm" onSubmit={handleSaveEditAction} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aeródromo</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Comitê</label>
                   <input required value={editActionForm.aerodromo} onChange={e => setEditActionForm({ ...editActionForm, aerodromo: e.target.value })}
                     className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700"
                     placeholder="Ex: 01_GADHOC AEROPORTOS" />
@@ -1000,7 +1000,7 @@ export default function MonitoringView() {
             <div className="p-6 overflow-y-auto space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Aeródromo</span>
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Comitê</span>
                   <p className="text-sm font-bold text-white">{showDetailModal.aerodromo}</p>
                 </div>
                 <div>
