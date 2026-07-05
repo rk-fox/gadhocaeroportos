@@ -156,7 +156,7 @@ export default function App() {
           <NavItem icon={<Activity size={18} />} label="Simulador" active={activeTab === 'Simulador'} onClick={() => setActiveTab('Simulador')} />
           <NavItem icon={<Trophy size={18} />} label="Ranking" active={activeTab === 'Ranking'} onClick={() => setActiveTab('Ranking')} />
           <NavItem icon={<Database size={18} />} label="Dados" active={activeTab === 'Dados'} onClick={() => setActiveTab('Dados')} />
-          <NavItem icon={<Activity size={18} />} label="Monitoramento" active={activeTab === 'Monitoramento'} onClick={() => setActiveTab('Monitoramento')} />
+          <NavItem icon={<Activity size={18} />} label="Painel de Ações" active={activeTab === 'Monitoramento'} onClick={() => setActiveTab('Monitoramento')} />
           <div className="my-4 border-t border-white/5 mx-6"></div>
           <NavItem icon={<Settings size={18} />} label="Configurações" active={activeTab === 'Configurações'} onClick={() => setActiveTab('Configurações')} />
           <NavItem icon={<BookOpen size={18} />} label="Sobre" active={activeTab === 'Sobre'} onClick={() => setActiveTab('Sobre')} />
