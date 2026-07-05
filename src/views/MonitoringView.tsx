@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { Plus, Edit2, History, RotateCcw, X, Info, Check, Eye, Trash2, KeyRound, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Edit2, Edit, History, RotateCcw, X, Info, Check, Eye, Trash2, KeyRound, ChevronUp, ChevronDown, FileUp, FileEdit } from 'lucide-react';
 
 export interface Action {
   id: number;
@@ -204,6 +204,7 @@ export default function MonitoringView() {
   const [showDetailModal, setShowDetailModal] = useState<Action | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<Action | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState<Action | null>(null);
+  const [showEditActionModal, setShowEditActionModal] = useState<Action | null>(null);
 
   // Password Modal State
   const [passwordModal, setPasswordModal] = useState<{
@@ -222,6 +223,10 @@ export default function MonitoringView() {
   // Form states
   const [isSaving, setIsSaving] = useState(false);
   const [createForm, setCreateForm] = useState({
+    aerodromo: '', conclusao: '', responsavel: '', acao: '',
+    detalhes: '', reuniao: '', status: 'Pendente', prazo: '',
+  });
+  const [editActionForm, setEditActionForm] = useState({
     aerodromo: '', conclusao: '', responsavel: '', acao: '',
     detalhes: '', reuniao: '', status: 'Pendente', prazo: '',
   });
@@ -504,6 +509,51 @@ export default function MonitoringView() {
     }
   };
 
+  const handleOpenEditAction = (action: Action) => {
+    requestPassword(() => {
+      setEditActionForm({
+        aerodromo: action.aerodromo,
+        conclusao: action.conclusao,
+        responsavel: action.responsavel,
+        acao: action.acao,
+        detalhes: action.detalhes || '',
+        reuniao: action.reuniao || '',
+        status: action.status,
+        prazo: action.prazo || '',
+      });
+      setShowEditActionModal(action);
+    });
+  };
+
+  const handleSaveEditAction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showEditActionModal) return;
+    try {
+      setIsSaving(true);
+      const payload = {
+        ...editActionForm,
+        prazo: editActionForm.prazo || null,
+        dt_conclusao: editActionForm.status === 'Concluída' 
+          ? (showEditActionModal.dt_conclusao || new Date().toISOString().split('T')[0]) 
+          : null,
+      };
+      
+      const { error } = await supabase
+        .from('actions')
+        .update(payload)
+        .eq('id', showEditActionModal.id);
+        
+      if (error) throw error;
+      
+      setShowEditActionModal(null);
+      fetchActions();
+    } catch (err: any) {
+      alert('Erro ao salvar edição: ' + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -674,7 +724,7 @@ export default function MonitoringView() {
                               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-850 rounded-lg transition-all"
                               title="Atualizar"
                             >
-                              <Edit2 size={14} />
+                              <FileUp size={14} />
                             </button>
                           )}
                           <button
@@ -683,6 +733,13 @@ export default function MonitoringView() {
                             title="Ver Histórico"
                           >
                             <History size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleOpenEditAction(action)}
+                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-850 rounded-lg transition-all"
+                            title="Editar Ação"
+                          >
+                            <Edit size={14} />
                           </button>
                           {action.status === 'Concluída' && (
                             <button
@@ -835,6 +892,86 @@ export default function MonitoringView() {
               <button type="submit" form="createForm" disabled={isSaving}
                 className="px-4 py-2 bg-sky-500 hover:bg-sky-600 rounded-lg text-sm font-bold text-white flex items-center justify-center min-w-[80px]">
                 {isSaving ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MODAL: Editar Ação ===== */}
+      {showEditActionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                Editar Ação
+              </h3>
+              <button onClick={() => setShowEditActionModal(null)} className="text-slate-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-4">
+              <form id="editActionForm" onSubmit={handleSaveEditAction} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aeródromo</label>
+                  <input required value={editActionForm.aerodromo} onChange={e => setEditActionForm({ ...editActionForm, aerodromo: e.target.value })}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700"
+                    placeholder="Ex: 01_GADHOC AEROPORTOS" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Conclusão</label>
+                  <input required value={editActionForm.conclusao} onChange={e => setEditActionForm({ ...editActionForm, conclusao: e.target.value })}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700"
+                    placeholder="Ex: PROGRAMA DE REDUÇÃO DO TEMPO" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Responsável</label>
+                  <input required value={editActionForm.responsavel} onChange={e => setEditActionForm({ ...editActionForm, responsavel: e.target.value })}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700"
+                    placeholder="Nome do responsável" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Reunião</label>
+                  <input required value={editActionForm.reuniao} onChange={e => setEditActionForm({ ...editActionForm, reuniao: e.target.value })}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700"
+                    placeholder="Ex: 19_GADHOC AEROPORTOS" />
+                </div>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ação</label>
+                  <input required value={editActionForm.acao} onChange={e => setEditActionForm({ ...editActionForm, acao: e.target.value })}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700"
+                    placeholder="Descrição simplificada da ação" />
+                </div>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Detalhes</label>
+                  <textarea value={editActionForm.detalhes} onChange={e => setEditActionForm({ ...editActionForm, detalhes: e.target.value })}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700 min-h-[80px]"
+                    placeholder="Detalhamento da ação..." />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Status</label>
+                  <select value={editActionForm.status} onChange={e => setEditActionForm({ ...editActionForm, status: e.target.value })}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700">
+                    <option>Pendente</option>
+                    <option>Em Andamento</option>
+                    <option>Concluída</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Prazo</label>
+                  <input type="date" value={editActionForm.prazo} onChange={e => setEditActionForm({ ...editActionForm, prazo: e.target.value })}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-sm text-white p-2.5 focus:outline-none focus:border-slate-700" />
+                </div>
+              </form>
+            </div>
+            <div className="p-4 border-t border-slate-800 bg-slate-950 flex justify-end gap-2">
+              <button onClick={() => setShowEditActionModal(null)}
+                className="px-4 py-2 border border-slate-800 hover:bg-slate-850 rounded-lg text-sm font-medium text-slate-300">
+                Cancelar
+              </button>
+              <button type="submit" form="editActionForm" disabled={isSaving}
+                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 rounded-lg text-sm font-bold text-white flex items-center justify-center min-w-[80px]">
+                {isSaving ? 'Salvando...' : 'Salvar Edição'}
               </button>
             </div>
           </div>
